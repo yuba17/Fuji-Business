@@ -1,0 +1,526 @@
+---
+alwaysApply: true
+---
+
+# Reglas de Diseño Visual - FujiOffers / Fuji Operations Suite
+
+## Paleta de Colores Corporativa
+
+### Colores Principales (Fujitsu)
+- **Rojo Primario**: `#E11D48` / `#DA1A32` → Tailwind: `red-600` / `red-700`
+- **Naranja Secundario**: `#F97316` → Tailwind: `orange-500` / `orange-600`
+- **Azul**: `#0EA5E9` → Tailwind: `blue-500` / `blue-600`
+- **Morado**: `#6366F1` → Tailwind: `purple-500` / `purple-600`
+- **Verde**: `#10B981` → Tailwind: `green-500` / `green-600`
+- **Amarillo**: `#F59E0B` → Tailwind: `yellow-500` / `yellow-600`
+
+### Grises
+- **Fondo Oscuro**: `#1F2937` → Tailwind: `gray-800`
+- **Texto Principal**: `#374151` → Tailwind: `gray-700`
+- **Texto Secundario**: `#6B7280` → Tailwind: `gray-500`
+- **Bordes**: `#E5E7EB` → Tailwind: `gray-200`
+- **Fondo Claro**: `#F9FAFB` → Tailwind: `gray-50`
+
+### Degradados Estándar
+- **Rojo→Naranja** (Principal): `bg-gradient-to-r from-red-600 to-orange-600`
+- **Rojo→Naranja** (Hover): `hover:from-red-700 hover:to-orange-700`
+- **Morado→Azul**: `bg-gradient-to-r from-purple-600 to-blue-600`
+- **Azul→Verde**: `bg-gradient-to-br from-blue-500 to-green-500`
+
+## Tipografía
+
+### Headings
+- **H1 Principal**: `text-4xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent`
+- **H1 Secundario**: `text-3xl font-bold text-gray-900`
+- **H2**: `text-2xl font-bold text-gray-800`
+- **H3**: `text-xl font-bold text-gray-900` o `text-lg font-semibold text-gray-900`
+- **H4**: `text-base font-bold text-gray-900` o `text-sm font-bold text-gray-900`
+
+### Texto
+- **Body Principal**: `text-sm text-gray-700`
+- **Body Secundario**: `text-xs text-gray-600`
+- **Labels**: `text-xs font-medium text-gray-700 uppercase tracking-wide`
+- **Subtítulos**: `text-sm text-gray-600`
+
+### Fuente
+- **Font Family**: Figtree (400, 500, 600) desde `fonts.bunny.net`
+
+## Componentes Base
+
+### Tarjetas (Cards)
+```html
+<!-- Tarjeta Estándar -->
+<div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-red-500">
+    <!-- Contenido -->
+</div>
+
+<!-- Tarjeta con Gradiente -->
+<div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-md p-4 text-white">
+    <p class="text-blue-100 text-xs font-medium uppercase tracking-wide">Label</p>
+    <p class="text-3xl font-bold mt-1">Valor</p>
+    <p class="text-blue-100 text-xs mt-0.5">Descripción</p>
+</div>
+
+<!-- Tarjeta Compacta -->
+<div class="bg-white rounded-lg shadow-md p-3">
+    <!-- Contenido compacto -->
+</div>
+```
+
+### Botones
+
+#### Botón Primario (Acción Principal)
+```html
+<button class="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-xl hover:from-red-700 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+    <span>Texto</span>
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+    </svg>
+</button>
+```
+
+#### Botón Secundario
+```html
+<button class="px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 rounded-xl transition-all flex items-center gap-2 border border-gray-200 shadow-sm hover:shadow">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+    </svg>
+    Anterior
+</button>
+```
+
+#### Botón Gris (Neutro)
+```html
+<a href="#" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center">
+    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+    </svg>
+    Volver
+</a>
+```
+
+### Inputs y Formularios
+
+#### Input Estándar
+```html
+<input type="text" 
+       class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all">
+```
+
+#### Select
+```html
+<select class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all">
+    <option value="">-- Selecciona --</option>
+</select>
+```
+
+#### Textarea
+```html
+<textarea class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all resize-none" 
+          rows="4"></textarea>
+```
+
+### Badges y Estados
+
+#### Badge de Estado (Éxito)
+```html
+<span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-bold rounded-full">✅ Activo</span>
+```
+
+#### Badge de Estado (Advertencia)
+```html
+<span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-bold rounded-full">⚠️ Pendiente</span>
+```
+
+#### Badge de Estado (Error)
+```html
+<span class="px-3 py-1 bg-red-100 text-red-800 text-xs font-bold rounded-full">❌ Error</span>
+```
+
+#### Badge de Estado (Info)
+```html
+<span class="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded-full">ℹ️ Información</span>
+```
+
+#### Badge de Estado (Morado - Especial)
+```html
+<span class="px-3 py-1 bg-purple-100 text-purple-800 text-xs font-bold rounded-full">🔒 Aprobación</span>
+```
+
+### Tablas
+
+#### Estructura de Tabla
+```html
+<div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div class="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
+        <h3 class="text-base font-semibold text-gray-900 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                <!-- Icono -->
+            </svg>
+            Título de la Tabla
+        </h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Columna</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900">Contenido</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+```
+
+### Modales
+
+#### Estructura de Modal
+```html
+<div x-show="showModal" 
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     class="fixed inset-0 z-50 bg-gray-900/40 flex items-center justify-center p-4">
+    <div x-show="showModal"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <!-- Header con gradiente -->
+        <div class="bg-gradient-to-r from-red-600 to-orange-600 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+            <h3 class="text-xl font-bold text-white">Título del Modal</h3>
+            <button @click="showModal = false" class="text-white/80 hover:text-white hover:bg-white/10 p-1.5 rounded-lg transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <!-- Contenido -->
+        <div class="p-6">
+            <!-- Contenido del modal -->
+        </div>
+        <!-- Footer -->
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-2xl flex items-center justify-end gap-3">
+            <button @click="showModal = false" class="px-4 py-2 text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 rounded-xl border border-gray-200">
+                Cancelar
+            </button>
+            <button @click="save()" class="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-xl hover:from-red-700 hover:to-orange-700">
+                Guardar
+            </button>
+        </div>
+    </div>
+</div>
+```
+
+### Alertas y Notificaciones
+
+#### Alerta de Éxito
+```html
+<div class="p-4 bg-green-50 border-l-4 border-green-400 rounded-r-lg">
+    <div class="flex items-start gap-2">
+        <svg class="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+        </svg>
+        <p class="text-sm text-green-800">Mensaje de éxito</p>
+    </div>
+</div>
+```
+
+#### Alerta de Advertencia
+```html
+<div class="mb-4 p-3 bg-amber-50 border-l-3 border-amber-400 rounded-r-lg">
+    <div class="flex items-start gap-2">
+        <svg class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <p class="text-xs text-amber-800">Mensaje de advertencia</p>
+    </div>
+</div>
+```
+
+#### Notificación Toast (JavaScript)
+```html
+<div class="fixed top-4 right-4 px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium transition-all duration-300 z-50 bg-green-500">
+    Mensaje de notificación
+</div>
+```
+
+### Iconografía
+
+#### Uso de Heroicons (SVG inline)
+```html
+<!-- Icono estándar -->
+<svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+    <path fill-rule="evenodd" d="..." clip-rule="evenodd"/>
+</svg>
+
+<!-- Icono con color temático -->
+<svg class="w-5 h-5 mr-2 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+    <path fill-rule="evenodd" d="..." clip-rule="evenodd"/>
+</svg>
+```
+
+#### Uso de Emojis
+- ✅ Éxito / Completado
+- ⚠️ Advertencia / Pendiente
+- ❌ Error / Cancelado
+- 📊 Datos / Gráficos
+- 🔒 Seguridad / Bloqueado
+- 🧭 Navegación / Dirección
+- 📈 Crecimiento / Progreso
+- 📉 Descenso / Alerta
+- 💰 Financiero / Dinero
+- 🎯 Objetivo / Meta
+- 🤖 IA / Automatización
+- ⚡ Rápido / Acción
+- 🏆 Ranking / Premio
+- 👥 Equipo / Personas
+- 📝 Notas / Documentación
+
+### Espaciado y Layout
+
+#### Grid de Tarjetas
+```html
+<!-- Grid 2 columnas en móvil, 4 en desktop -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <!-- Tarjetas -->
+</div>
+
+<!-- Grid 1 columna en móvil, 2 en desktop -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <!-- Contenido -->
+</div>
+
+<!-- Grid 1 columna en móvil, 3 en desktop -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Contenido -->
+</div>
+```
+
+#### Espaciado Vertical
+```html
+<!-- Espaciado estándar entre secciones -->
+<div class="space-y-4">
+    <!-- Secciones -->
+</div>
+
+<!-- Espaciado amplio -->
+<div class="space-y-6">
+    <!-- Secciones -->
+</div>
+
+<!-- Espaciado compacto -->
+<div class="space-y-3">
+    <!-- Secciones -->
+</div>
+```
+
+#### Contenedor Principal
+```html
+<div class="container mx-auto px-4 py-8">
+    <!-- Contenido -->
+</div>
+```
+
+### Headers de Sección
+
+#### Header con Icono y Gradiente
+```html
+<div class="flex items-center gap-3 mb-6">
+    <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+        1
+    </div>
+    <h2 class="text-2xl font-bold text-gray-800">Título de Sección</h2>
+</div>
+```
+
+#### Header Simple
+```html
+<div class="mb-8">
+    <h1 class="text-4xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
+        ⚡ Título Principal
+    </h1>
+    <p class="text-gray-600 mt-2">Descripción o subtítulo</p>
+</div>
+```
+
+### Estados Interactivos
+
+#### Hover en Tarjetas
+```html
+<div class="bg-white rounded-xl p-4 border-2 border-gray-200 hover:border-red-300 hover:shadow-lg transition-all cursor-pointer">
+    <!-- Contenido -->
+</div>
+```
+
+#### Estados de Carga
+```html
+<button disabled class="opacity-50 cursor-not-allowed">
+    <span class="inline-block animate-spin mr-2">⏳</span>
+    Cargando...
+</button>
+```
+
+#### Estados Vacíos
+```html
+<div class="text-center text-gray-500 py-8">
+    <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+    </svg>
+    <p class="text-sm">No hay datos disponibles</p>
+</div>
+```
+
+## Patrones de Interacción (Alpine.js)
+
+### Inicialización de Componente
+```html
+<div x-data="componentName()" x-init="init()" x-cloak>
+    <!-- Contenido -->
+</div>
+```
+
+### Transiciones
+```html
+<!-- Fade In/Out -->
+<div x-show="isVisible"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-200"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0">
+    <!-- Contenido -->
+</div>
+
+<!-- Scale + Fade -->
+<div x-show="isVisible"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0 scale-95"
+     x-transition:enter-end="opacity-100 scale-100">
+    <!-- Contenido -->
+</div>
+```
+
+### Overlay
+```html
+<div x-show="onboardingActive" 
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     class="fixed inset-0 z-40 bg-gray-900/40">
+</div>
+```
+
+## Convenciones de Código
+
+### Estructura de Vista Blade
+```blade
+@extends('layouts.dashboard')
+
+@section('breadcrumbs')
+<li>
+    <div class="flex items-center whitespace-nowrap">
+        <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+        </svg>
+        <span class="ml-1 text-sm text-gray-500 md:ml-2">Sección</span>
+    </div>
+</li>
+@endsection
+
+@section('content')
+<div class="container mx-auto px-4 py-8" x-data="componentName()" x-cloak>
+    <!-- Contenido -->
+</div>
+@endsection
+```
+
+### Uso de x-cloak
+- **SIEMPRE** incluir `x-cloak` en el contenedor principal con `x-data` para evitar flash de contenido sin estilo
+- Asegurar que el CSS incluye: `[x-cloak] { display: none !important; }`
+
+### Encoding UTF-8
+- **SIEMPRE** usar caracteres UTF-8 correctos (no entidades HTML como `&euro;` a menos que sea necesario)
+- Usar emojis directamente: ✅ ⚠️ ❌ 📊 🔒
+- Acentos en español: á, é, í, ó, ú, ñ, etc.
+
+### Responsive Design
+- Mobile-first: clases base para móvil, luego `md:`, `lg:`, `xl:` para breakpoints superiores
+- Breakpoints estándar: `sm:640px`, `md:768px`, `lg:1024px`, `xl:1280px`
+
+### Accesibilidad
+- Usar `aria-label` en iconos sin texto
+- Mantener contraste adecuado (texto sobre fondos)
+- Navegación por teclado funcional
+- Labels asociados a inputs
+
+## Reglas Específicas
+
+1. **NUNCA** usar colores personalizados fuera de la paleta definida
+2. **SIEMPRE** usar `rounded-2xl` para tarjetas principales, `rounded-lg` para secundarias
+3. **SIEMPRE** usar `shadow-lg` o `shadow-md` en tarjetas, nunca `shadow` solo
+4. **SIEMPRE** usar gradientes `from-red-600 to-orange-600` para acciones primarias
+5. **SIEMPRE** incluir transiciones en elementos interactivos (`transition-all`, `transition-colors`)
+6. **SIEMPRE** usar `text-xs` para labels y badges, `text-sm` para body
+7. **SIEMPRE** usar `font-bold` para títulos importantes, `font-semibold` para subtítulos
+8. **SIEMPRE** usar `uppercase tracking-wide` en labels de estadísticas
+9. **SIEMPRE** incluir iconos SVG inline (Heroicons) en lugar de icon fonts cuando sea posible
+10. **SIEMPRE** usar emojis para estados visuales rápidos (✅ ⚠️ ❌) combinados con colores
+
+## Ejemplos Completos
+
+### Dashboard Card con Estadística
+```html
+<div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-md p-4 text-white">
+    <div class="flex items-center justify-between">
+        <div>
+            <p class="text-blue-100 text-xs font-medium uppercase tracking-wide">Total Ofertas</p>
+            <p class="text-3xl font-bold mt-1">42</p>
+            <p class="text-blue-100 text-xs mt-0.5">Últimos 12 meses</p>
+        </div>
+        <svg class="w-12 h-12 opacity-80" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+        </svg>
+    </div>
+</div>
+```
+
+### Formulario con Pasos
+```html
+<div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-red-500">
+    <div class="flex items-center gap-3 mb-6">
+        <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+            1
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800">Paso 1: Información</h2>
+    </div>
+    
+    <div class="space-y-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Campo</label>
+            <input type="text" 
+                   class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all">
+        </div>
+        
+        <div class="flex items-center justify-end gap-3 pt-4">
+            <button type="button" class="px-4 py-2 text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 rounded-xl border border-gray-200">
+                Cancelar
+            </button>
+            <button type="submit" class="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-xl hover:from-red-700 hover:to-orange-700">
+                Continuar
+            </button>
+        </div>
+    </div>
+</div>
+```
+
+---
+
+**NOTA IMPORTANTE**: Estas reglas deben aplicarse consistentemente en todas las vistas. Cualquier desviación debe justificarse y documentarse. El objetivo es mantener una identidad visual coherente en toda la aplicación FujiOffers y sus extensiones (como Fuji Operations Suite).
+
