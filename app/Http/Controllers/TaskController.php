@@ -17,17 +17,30 @@ class TaskController extends Controller
      */
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', Task::class);
+        
         $user = auth()->user();
         
         $query = Task::with(['plan', 'area', 'assignedUser', 'milestone']);
         
         // Filtrar según rol
         if ($user->isManager()) {
-            $query->whereHas('plan', function($q) use ($user) {
-                $q->where('manager_id', $user->id);
+            $query->where(function($q) use ($user) {
+                $q->where('assigned_to', $user->id)
+                  ->orWhere('created_by', $user->id)
+                  ->orWhereIn('area_id', $user->areas->pluck('id'))
+                  ->orWhereHas('plan', function($planQ) use ($user) {
+                      $planQ->where('manager_id', $user->id)
+                            ->orWhere('director_id', $user->id);
+                  });
             });
         } elseif ($user->isTecnico()) {
-            $query->where('assigned_to', $user->id);
+            $query->where(function($q) use ($user) {
+                $q->where('assigned_to', $user->id)
+                  ->orWhere('created_by', $user->id);
+            });
+        } elseif ($user->isVisualizacion()) {
+            // Visualización ve todas las tareas
         }
         
         // Filtros
@@ -54,6 +67,9 @@ class TaskController extends Controller
      */
     public function create(Request $request): View
     {
+        $this->authorize('create', Task::class);
+        
+        $user = auth()->user();
         $plans = Plan::where('status', '!=', 'archived')->get();
         $areas = Area::where('is_active', true)->get();
         $users = User::all();
@@ -67,6 +83,8 @@ class TaskController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', Task::class);
+        
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -95,6 +113,8 @@ class TaskController extends Controller
      */
     public function show(Task $task): View
     {
+        $this->authorize('view', $task);
+        
         $task->load(['plan', 'area', 'assignedUser', 'creator', 'milestone', 'parentTask', 'subtasks']);
         
         return view('tasks.show', compact('task'));
@@ -105,6 +125,8 @@ class TaskController extends Controller
      */
     public function edit(Task $task): View
     {
+        $this->authorize('update', $task);
+        
         $plans = Plan::where('status', '!=', 'archived')->get();
         $areas = Area::where('is_active', true)->get();
         $users = User::all();
@@ -117,6 +139,8 @@ class TaskController extends Controller
      */
     public function update(Request $request, Task $task): RedirectResponse
     {
+        $this->authorize('update', $task);
+        
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -142,9 +166,25 @@ class TaskController extends Controller
      */
     public function destroy(Task $task): RedirectResponse
     {
+        $this->authorize('delete', $task);
+        
         $task->delete();
         
         return redirect()->route('tasks.index')
             ->with('success', 'Tarea eliminada correctamente');
+    }
+
+    /**
+     * Mostrar vista Kanban de tareas
+     */
+    public function kanban(Request $request): View
+    {
+        $this->authorize('viewAny', Task::class);
+        
+        $planId = $request->get('plan');
+        
+        return view('tasks.kanban', [
+            'planId' => $planId,
+        ]);
     }
 }

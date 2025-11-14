@@ -157,4 +157,43 @@ class User extends Authenticatable
     {
         return $this->hasMany(Task::class, 'created_by');
     }
+
+    /**
+     * Verificar si el usuario tiene un permiso específico
+     * Compatible con Laravel's Gate system
+     */
+    public function can($ability, $arguments = [])
+    {
+        // Si es director, tiene todos los permisos
+        if ($this->isDirector()) {
+            return true;
+        }
+
+        // Delegar a Gate para verificar policies
+        return app(\Illuminate\Contracts\Auth\Access\Gate::class)->forUser($this)->check($ability, $arguments);
+    }
+
+    /**
+     * Scopes para filtrar usuarios por rol
+     */
+    public function scopeDirectors($query)
+    {
+        return $query->whereHas('roles', function ($q) {
+            $q->where('slug', 'director');
+        });
+    }
+
+    public function scopeManagers($query)
+    {
+        return $query->whereHas('roles', function ($q) {
+            $q->where('slug', 'manager');
+        });
+    }
+
+    public function scopeTecnicos($query)
+    {
+        return $query->whereHas('roles', function ($q) {
+            $q->where('slug', 'tecnico');
+        });
+    }
 }

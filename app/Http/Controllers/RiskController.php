@@ -14,14 +14,25 @@ class RiskController extends Controller
 {
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', Risk::class);
+        
         $user = auth()->user();
         
         $query = Risk::with(['plan', 'area', 'owner']);
         
         if ($user->isManager()) {
-            $query->whereHas('plan', function($q) use ($user) {
-                $q->where('manager_id', $user->id);
+            $query->where(function($q) use ($user) {
+                $q->where('owner_id', $user->id)
+                  ->orWhereIn('area_id', $user->areas->pluck('id'))
+                  ->orWhereHas('plan', function($planQ) use ($user) {
+                      $planQ->where('manager_id', $user->id)
+                            ->orWhere('director_id', $user->id);
+                  });
             });
+        } elseif ($user->isTecnico()) {
+            $query->where('owner_id', $user->id);
+        } elseif ($user->isVisualizacion()) {
+            // Visualización ve todos los riesgos
         }
         
         if ($request->filled('plan_id')) {
@@ -40,6 +51,8 @@ class RiskController extends Controller
 
     public function create(Request $request): View
     {
+        $this->authorize('create', Risk::class);
+        
         $plans = Plan::where('status', '!=', 'archived')->get();
         $areas = Area::where('is_active', true)->get();
         $users = User::all();
@@ -50,6 +63,8 @@ class RiskController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', Risk::class);
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -72,6 +87,8 @@ class RiskController extends Controller
 
     public function show(Risk $risk): View
     {
+        $this->authorize('view', $risk);
+        
         $risk->load(['plan', 'area', 'owner', 'mitigationActions.responsible']);
         
         return view('risks.show', compact('risk'));
@@ -79,6 +96,8 @@ class RiskController extends Controller
 
     public function edit(Risk $risk): View
     {
+        $this->authorize('update', $risk);
+        
         $plans = Plan::where('status', '!=', 'archived')->get();
         $areas = Area::where('is_active', true)->get();
         $users = User::all();
@@ -88,6 +107,8 @@ class RiskController extends Controller
 
     public function update(Request $request, Risk $risk): RedirectResponse
     {
+        $this->authorize('update', $risk);
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -108,6 +129,8 @@ class RiskController extends Controller
 
     public function destroy(Risk $risk): RedirectResponse
     {
+        $this->authorize('delete', $risk);
+        
         $risk->delete();
         
         return redirect()->route('risks.index')

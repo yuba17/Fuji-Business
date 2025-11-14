@@ -11,6 +11,8 @@ class ClientController extends Controller
 {
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', Client::class);
+        
         $query = Client::query();
         
         if ($request->filled('search')) {
@@ -28,11 +30,15 @@ class ClientController extends Controller
 
     public function create(): View
     {
+        $this->authorize('create', Client::class);
+        
         return view('clients.create');
     }
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', Client::class);
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'sector_economico' => 'nullable|string|max:255',
@@ -53,6 +59,8 @@ class ClientController extends Controller
 
     public function show(Client $client): View
     {
+        $this->authorize('view', $client);
+        
         $client->load(['projects', 'plans']);
         
         return view('clients.show', compact('client'));
@@ -60,11 +68,15 @@ class ClientController extends Controller
 
     public function edit(Client $client): View
     {
+        $this->authorize('update', $client);
+        
         return view('clients.edit', compact('client'));
     }
 
     public function update(Request $request, Client $client): RedirectResponse
     {
+        $this->authorize('update', $client);
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'sector_economico' => 'nullable|string|max:255',
@@ -85,6 +97,8 @@ class ClientController extends Controller
 
     public function destroy(Client $client): RedirectResponse
     {
+        $this->authorize('delete', $client);
+        
         $client->delete();
         
         return redirect()->route('clients.index')

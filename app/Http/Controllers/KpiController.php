@@ -17,6 +17,8 @@ class KpiController extends Controller
      */
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', Kpi::class);
+        
         $user = auth()->user();
         
         $query = Kpi::with(['plan', 'area', 'responsible'])
@@ -24,9 +26,18 @@ class KpiController extends Controller
         
         // Filtrar según rol
         if ($user->isManager()) {
-            $query->whereHas('plan', function($q) use ($user) {
-                $q->where('manager_id', $user->id);
+            $query->where(function($q) use ($user) {
+                $q->where('responsible_id', $user->id)
+                  ->orWhereIn('area_id', $user->areas->pluck('id'))
+                  ->orWhereHas('plan', function($planQ) use ($user) {
+                      $planQ->where('manager_id', $user->id)
+                            ->orWhere('director_id', $user->id);
+                  });
             });
+        } elseif ($user->isTecnico()) {
+            $query->where('responsible_id', $user->id);
+        } elseif ($user->isVisualizacion()) {
+            // Visualización ve todos los KPIs
         }
         
         // Filtros
@@ -49,6 +60,8 @@ class KpiController extends Controller
      */
     public function create(Request $request): View
     {
+        $this->authorize('create', Kpi::class);
+        
         $plans = Plan::where('status', '!=', 'archived')->get();
         $areas = Area::where('is_active', true)->get();
         $users = User::all();
@@ -62,6 +75,8 @@ class KpiController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', Kpi::class);
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -96,6 +111,8 @@ class KpiController extends Controller
      */
     public function show(Kpi $kpi): View
     {
+        $this->authorize('view', $kpi);
+        
         $kpi->load(['plan', 'area', 'responsible', 'history.updater']);
         
         return view('kpis.show', compact('kpi'));
@@ -106,6 +123,8 @@ class KpiController extends Controller
      */
     public function edit(Kpi $kpi): View
     {
+        $this->authorize('update', $kpi);
+        
         $plans = Plan::where('status', '!=', 'archived')->get();
         $areas = Area::where('is_active', true)->get();
         $users = User::all();
@@ -118,6 +137,8 @@ class KpiController extends Controller
      */
     public function update(Request $request, Kpi $kpi): RedirectResponse
     {
+        $this->authorize('update', $kpi);
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -148,6 +169,8 @@ class KpiController extends Controller
      */
     public function destroy(Kpi $kpi): RedirectResponse
     {
+        $this->authorize('delete', $kpi);
+        
         $kpi->update(['is_active' => false]);
         
         return redirect()->route('kpis.index')

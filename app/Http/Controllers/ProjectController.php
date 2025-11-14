@@ -14,7 +14,27 @@ class ProjectController extends Controller
 {
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', Project::class);
+        
+        $user = auth()->user();
         $query = Project::with(['client', 'planComercial', 'manager']);
+        
+        // Filtrar según rol
+        if ($user->isManager()) {
+            $query->where(function($q) use ($user) {
+                $q->where('manager_id', $user->id)
+                  ->orWhereHas('planComercial', function($planQ) use ($user) {
+                      $planQ->where('manager_id', $user->id)
+                            ->orWhere('director_id', $user->id);
+                  });
+            });
+        } elseif ($user->isTecnico()) {
+            $query->whereHas('tasks', function($q) use ($user) {
+                $q->where('assigned_to', $user->id);
+            });
+        } elseif ($user->isVisualizacion()) {
+            // Visualización ve todos los proyectos
+        }
         
         if ($request->filled('client_id')) {
             $query->where('client_id', $request->client_id);
@@ -32,6 +52,8 @@ class ProjectController extends Controller
 
     public function create(Request $request): View
     {
+        $this->authorize('create', Project::class);
+        
         $clients = Client::where('is_active', true)->get();
         $plans = Plan::whereHas('planType', function($q) {
             $q->where('slug', 'plan-comercial');
@@ -44,6 +66,8 @@ class ProjectController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', Project::class);
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -69,6 +93,8 @@ class ProjectController extends Controller
 
     public function show(Project $project): View
     {
+        $this->authorize('view', $project);
+        
         $project->load(['client', 'planComercial', 'manager', 'tasks', 'risks']);
         
         return view('projects.show', compact('project'));
@@ -76,6 +102,8 @@ class ProjectController extends Controller
 
     public function edit(Project $project): View
     {
+        $this->authorize('update', $project);
+        
         $clients = Client::where('is_active', true)->get();
         $plans = Plan::whereHas('planType', function($q) {
             $q->where('slug', 'plan-comercial');
@@ -87,6 +115,8 @@ class ProjectController extends Controller
 
     public function update(Request $request, Project $project): RedirectResponse
     {
+        $this->authorize('update', $project);
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -109,6 +139,8 @@ class ProjectController extends Controller
 
     public function destroy(Project $project): RedirectResponse
     {
+        $this->authorize('delete', $project);
+        
         $project->delete();
         
         return redirect()->route('projects.index')

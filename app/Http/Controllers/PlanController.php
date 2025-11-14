@@ -16,16 +16,26 @@ class PlanController extends Controller
      */
     public function index(): View
     {
+        $this->authorize('viewAny', Plan::class);
+        
         $user = auth()->user();
         
         $query = Plan::with(['planType', 'area', 'manager', 'director']);
         
         // Filtrar según rol
         if ($user->isManager()) {
-            $query->where('manager_id', $user->id);
+            $query->where(function($q) use ($user) {
+                $q->where('manager_id', $user->id)
+                  ->orWhere('director_id', $user->id)
+                  ->orWhereIn('area_id', $user->areas->pluck('id'));
+            });
         } elseif ($user->isTecnico()) {
-            // Los técnicos solo ven planes donde participan
-            // TODO: Implementar lógica de participación
+            // Los técnicos solo ven planes donde tienen tareas asignadas
+            $query->whereHas('tasks', function($q) use ($user) {
+                $q->where('assigned_to', $user->id);
+            });
+        } elseif ($user->isVisualizacion()) {
+            // Visualización ve todos los planes
         }
         
         $plans = $query->latest()->paginate(15);
@@ -38,6 +48,8 @@ class PlanController extends Controller
      */
     public function create(): View
     {
+        $this->authorize('create', Plan::class);
+        
         $planTypes = PlanType::where('is_active', true)->orderBy('order')->get();
         $areas = Area::where('is_active', true)->orderBy('order')->get();
         
@@ -49,6 +61,8 @@ class PlanController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', Plan::class);
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string',
@@ -74,6 +88,8 @@ class PlanController extends Controller
      */
     public function show(Plan $plan): View
     {
+        $this->authorize('view', $plan);
+        
         $plan->load(['planType', 'area', 'manager', 'director', 'sections', 'kpis', 'milestones', 'tasks', 'risks']);
         
         return view('plans.show', compact('plan'));
@@ -84,6 +100,8 @@ class PlanController extends Controller
      */
     public function edit(Plan $plan): View
     {
+        $this->authorize('update', $plan);
+        
         $planTypes = PlanType::where('is_active', true)->orderBy('order')->get();
         $areas = Area::where('is_active', true)->orderBy('order')->get();
         
@@ -95,6 +113,8 @@ class PlanController extends Controller
      */
     public function update(Request $request, Plan $plan): RedirectResponse
     {
+        $this->authorize('update', $plan);
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string',
@@ -116,7 +136,8 @@ class PlanController extends Controller
      */
     public function destroy(Plan $plan): RedirectResponse
     {
-        // TODO: Implementar eliminación
+        $this->authorize('delete', $plan);
+        
         $plan->delete();
         
         return redirect()->route('plans.index')

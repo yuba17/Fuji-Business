@@ -13,6 +13,8 @@ class DecisionController extends Controller
 {
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', Decision::class);
+        
         $query = Decision::with(['proponent', 'plans']);
         
         if ($request->filled('status')) {
@@ -33,6 +35,8 @@ class DecisionController extends Controller
 
     public function create(Request $request): View
     {
+        $this->authorize('create', Decision::class);
+        
         $plans = Plan::where('status', '!=', 'archived')->get();
         $users = User::all();
         $planId = $request->get('plan_id');
@@ -42,6 +46,8 @@ class DecisionController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', Decision::class);
+        
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -74,6 +80,8 @@ class DecisionController extends Controller
 
     public function show(Decision $decision): View
     {
+        $this->authorize('view', $decision);
+        
         $decision->load(['proponent', 'plans']);
         
         return view('decisions.show', compact('decision'));
@@ -81,6 +89,8 @@ class DecisionController extends Controller
 
     public function edit(Decision $decision): View
     {
+        $this->authorize('update', $decision);
+        
         $plans = Plan::where('status', '!=', 'archived')->get();
         $users = User::all();
         
@@ -89,6 +99,8 @@ class DecisionController extends Controller
 
     public function update(Request $request, Decision $decision): RedirectResponse
     {
+        $this->authorize('update', $decision);
+        
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -117,6 +129,8 @@ class DecisionController extends Controller
 
     public function destroy(Decision $decision): RedirectResponse
     {
+        $this->authorize('delete', $decision);
+        
         $decision->delete();
         
         return redirect()->route('decisions.index')

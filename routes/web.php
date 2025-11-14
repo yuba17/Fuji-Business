@@ -34,11 +34,17 @@ Route::middleware(['auth'])->group(function () {
 
     // Plans
     Route::resource('plans', App\Http\Controllers\PlanController::class);
+    Route::get('plans/{plan}/versions', [App\Http\Controllers\PlanVersionController::class, 'index'])->name('plans.versions');
+    Route::post('plans/{plan}/versions', [App\Http\Controllers\PlanVersionController::class, 'store'])->name('plans.versions.store');
+    Route::get('plans/{plan}/versions/{version}', [App\Http\Controllers\PlanVersionController::class, 'show'])->name('plans.versions.show');
+    Route::get('plans/{plan}/versions/{version1}/compare/{version2?}', [App\Http\Controllers\PlanVersionController::class, 'compare'])->name('plans.versions.compare');
+    Route::post('plans/{plan}/versions/{version}/restore', [App\Http\Controllers\PlanVersionController::class, 'restore'])->name('plans.versions.restore');
     
     // KPIs
     Route::resource('kpis', App\Http\Controllers\KpiController::class);
     
     // Tasks
+    Route::get('tasks/kanban', [App\Http\Controllers\TaskController::class, 'kanban'])->name('tasks.kanban');
     Route::resource('tasks', App\Http\Controllers\TaskController::class);
     
     // Risks
