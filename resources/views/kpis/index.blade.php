@@ -37,16 +37,31 @@
 @endsection
 
 @section('content')
+<!-- Header Limpio y Moderno -->
 <div class="mb-8">
-    <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent break-words">
-        📈 KPIs
-    </h1>
-    <p class="text-gray-600 mt-2">Indicadores clave de rendimiento</p>
+    <div class="bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-600 rounded-2xl shadow-lg p-8 text-white relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent"></div>
+        <div class="relative z-10">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-6">
+                    <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-4xl font-bold mb-2">KPIs</h1>
+                        <p class="text-blue-50 text-sm">Indicadores clave de rendimiento</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Filtros -->
 <div class="mb-6">
-    <x-ui.card variant="compact">
+    <div class="bg-white rounded-xl shadow-md p-6">
         <form method="GET" action="{{ route('kpis.index') }}" class="flex flex-wrap items-center gap-4">
             <div class="flex-1 min-w-[200px]">
                 <x-ui.input 
@@ -79,14 +94,14 @@
                 </x-ui.button>
             </div>
         </form>
-    </x-ui.card>
+    </div>
 </div>
 
 <!-- Lista de KPIs -->
 @if($kpis->count() > 0)
     <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         @foreach($kpis as $kpi)
-            <x-ui.card class="hover:shadow-xl transition-shadow cursor-pointer" onclick="window.location.href='{{ route('kpis.show', $kpi) }}'">
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all cursor-pointer" onclick="window.location.href='{{ route('kpis.show', $kpi) }}'">
                 <div class="flex items-start justify-between mb-4">
                     <div class="flex-1">
                         <h3 class="text-lg font-bold text-gray-900 mb-1">{{ $kpi->name }}</h3>
@@ -122,7 +137,7 @@
                         Ver →
                     </a>
                 </div>
-            </x-ui.card>
+            </div>
         @endforeach
     </div>
     
@@ -131,19 +146,21 @@
         {{ $kpis->links() }}
     </div>
 @else
-    <x-ui.card>
+    <div class="bg-white rounded-xl shadow-md p-6">
         <div class="text-center py-12 text-gray-500">
-            <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-            </svg>
-            <p class="text-sm mb-4">No hay KPIs creados aún</p>
+            <div class="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+            </div>
+            <p class="text-sm mb-4 font-medium">No hay KPIs creados aún</p>
             @if(auth()->user()->isDirector() || auth()->user()->isManager())
-                <x-ui.button href="{{ route('kpis.create') }}" variant="primary">
+                <a href="{{ route('kpis.create') }}" class="inline-block px-6 py-3 text-sm font-semibold bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all shadow-sm">
                     Crear Primer KPI
-                </x-ui.button>
+                </a>
             @endif
         </div>
-    </x-ui.card>
+    </div>
 @endif
 @endsection
 

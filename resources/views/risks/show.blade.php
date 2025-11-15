@@ -129,29 +129,23 @@
         </dl>
     </x-ui.card>
     
-    @if($risk->mitigationActions->count() > 0)
-        <x-ui.card>
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Acciones de Mitigación</h2>
-            <div class="space-y-3">
-                @foreach($risk->mitigationActions as $action)
-                    <div class="border-l-4 border-blue-500 pl-4 py-2">
-                        <h3 class="font-semibold text-gray-900">{{ $action->action }}</h3>
-                        @if($action->description)
-                            <p class="text-sm text-gray-600 mt-1">{{ $action->description }}</p>
-                        @endif
-                        <div class="flex items-center gap-3 mt-2 text-xs text-gray-500">
-                            @if($action->responsible)
-                                <span>Responsable: {{ $action->responsible->name }}</span>
-                            @endif
-                            @if($action->target_date)
-                                <span>Objetivo: {{ $action->target_date->format('d/m/Y') }}</span>
-                            @endif
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        </x-ui.card>
-    @endif
+    <x-ui.card>
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-bold text-gray-800">Acciones de Mitigación</h2>
+            @can('update', $risk)
+                <a 
+                    href="{{ route('risks.mitigation-actions.create', $risk) }}"
+                    class="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-xl hover:from-red-700 hover:to-orange-700"
+                >
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Nueva Acción
+                </a>
+            @endcan
+        </div>
+        @livewire('risks.mitigation-action-list', ['risk' => $risk])
+    </x-ui.card>
 </div>
 @endsection
 

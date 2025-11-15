@@ -136,4 +136,56 @@ class RiskController extends Controller
         return redirect()->route('risks.index')
             ->with('success', 'Riesgo eliminado correctamente');
     }
+
+    /**
+     * Mostrar matriz de riesgos
+     */
+    public function matrix(Request $request): View
+    {
+        $this->authorize('viewAny', Risk::class);
+        
+        $user = auth()->user();
+        
+        $query = Risk::with(['plan', 'area', 'owner']);
+        
+        // Filtrar según rol
+        if ($user->isManager()) {
+            $query->where(function($q) use ($user) {
+                $q->where('owner_id', $user->id)
+                  ->orWhereIn('area_id', $user->areas->pluck('id'))
+                  ->orWhereHas('plan', function($planQ) use ($user) {
+                      $planQ->where('manager_id', $user->id)
+                            ->orWhere('director_id', $user->id);
+                  });
+            });
+        } elseif ($user->isTecnico()) {
+            $query->where('owner_id', $user->id);
+        }
+        
+        if ($request->filled('plan_id')) {
+            $query->where('plan_id', $request->plan_id);
+        }
+        
+        $risks = $query->get();
+        $plans = Plan::where('status', '!=', 'archived')->get();
+        
+        return view('risks.matrix', compact('risks', 'plans'));
+    }
+
+    /**
+     * Mostrar panel corporativo de riesgos
+     */
+    public function corporate(): View
+    {
+        $this->authorize('viewAny', Risk::class);
+        
+        // Solo director puede ver panel corporativo completo
+        if (!auth()->user()->isDirector()) {
+            abort(403);
+        }
+        
+        $risks = Risk::with(['plan', 'area', 'owner'])->get();
+        
+        return view('risks.corporate', compact('risks'));
+    }
 }

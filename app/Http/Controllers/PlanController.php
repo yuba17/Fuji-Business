@@ -18,29 +18,7 @@ class PlanController extends Controller
     {
         $this->authorize('viewAny', Plan::class);
         
-        $user = auth()->user();
-        
-        $query = Plan::with(['planType', 'area', 'manager', 'director']);
-        
-        // Filtrar según rol
-        if ($user->isManager()) {
-            $query->where(function($q) use ($user) {
-                $q->where('manager_id', $user->id)
-                  ->orWhere('director_id', $user->id)
-                  ->orWhereIn('area_id', $user->areas->pluck('id'));
-            });
-        } elseif ($user->isTecnico()) {
-            // Los técnicos solo ven planes donde tienen tareas asignadas
-            $query->whereHas('tasks', function($q) use ($user) {
-                $q->where('assigned_to', $user->id);
-            });
-        } elseif ($user->isVisualizacion()) {
-            // Visualización ve todos los planes
-        }
-        
-        $plans = $query->latest()->paginate(15);
-        
-        return view('plans.index', compact('plans'));
+        return view('plans.index');
     }
 
     /**
@@ -139,8 +117,24 @@ class PlanController extends Controller
         $this->authorize('delete', $plan);
         
         $plan->delete();
-        
+
         return redirect()->route('plans.index')
             ->with('success', 'Plan eliminado correctamente');
+    }
+
+    /**
+     * Mostrar roadmap (vista Gantt) del plan
+     */
+    public function roadmap(Plan $plan): View
+    {
+        $this->authorize('view', $plan);
+        
+        $milestones = $plan->milestones()
+            ->with(['responsible', 'tasks', 'predecessorDependencies', 'successorDependencies'])
+            ->orderBy('order')
+            ->orderBy('target_date')
+            ->get();
+        
+        return view('plans.roadmap', compact('plan', 'milestones'));
     }
 }

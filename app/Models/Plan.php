@@ -208,6 +208,14 @@ class Plan extends Model
     }
 
     /**
+     * Verificar si el plan tiene las secciones requeridas
+     */
+    public function hasRequiredSections(): bool
+    {
+        return $this->sections()->count() > 0;
+    }
+
+    /**
      * Obtener el estado en español
      */
     public function getStatusLabelAttribute(): string

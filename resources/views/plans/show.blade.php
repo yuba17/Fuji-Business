@@ -35,6 +35,14 @@
 
 @section('header-actions')
 <div class="flex gap-2">
+    <a href="{{ route('plans.roadmap', $plan) }}" class="inline-block">
+        <x-ui.button variant="secondary">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+            Roadmap
+        </x-ui.button>
+    </a>
     <a href="{{ route('plans.versions', $plan) }}" class="inline-block">
         <x-ui.button variant="secondary">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,108 +63,164 @@
 @endsection
 
 @section('content')
-<!-- Header del Plan -->
+<!-- Header del Plan - Diseño Limpio -->
 <div class="mb-8">
-    <div class="flex items-start justify-between mb-4">
-        <div class="flex-1">
-            <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent break-words mb-2">
-                {{ $plan->name }}
-            </h1>
-            <p class="text-gray-600">{{ $plan->description }}</p>
-        </div>
-        <x-ui.badge 
-            variant="{{ $plan->status === 'approved' ? 'success' : ($plan->status === 'in_progress' ? 'info' : 'warning') }}">
-            {{ $plan->status_label }}
-        </x-ui.badge>
-    </div>
-    
-    <div class="flex flex-wrap gap-4 text-sm text-gray-600">
-        <div class="flex items-center gap-2">
-            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-            </svg>
-            <span>{{ $plan->planType->name ?? 'Sin tipo' }}</span>
-        </div>
-        <div class="flex items-center gap-2">
-            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-            </svg>
-            <span>{{ $plan->area->name ?? 'Sin área' }}</span>
-        </div>
-        @if($plan->manager)
-            <div class="flex items-center gap-2">
-                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                </svg>
-                <span>Manager: {{ $plan->manager->name }}</span>
+    <div class="bg-gradient-to-r from-red-500 via-orange-500 to-red-600 rounded-2xl shadow-lg p-8 text-white relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent"></div>
+        <div class="relative z-10">
+            <div class="flex items-start justify-between mb-4">
+                <div class="flex-1">
+                    <h1 class="text-4xl font-bold mb-3">{{ $plan->name }}</h1>
+                    <p class="text-red-50 text-sm">{{ $plan->description }}</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <x-ui.badge 
+                        variant="{{ $plan->status === 'approved' ? 'success' : ($plan->status === 'in_progress' ? 'info' : 'warning') }}">
+                        {{ $plan->status_label }}
+                    </x-ui.badge>
+                    @livewire('plans.plan-status-changer', ['plan' => $plan], key('status-changer-' . $plan->id))
+                </div>
             </div>
-        @endif
+            
+            <div class="flex flex-wrap gap-4 text-sm text-red-50">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                    </svg>
+                    <span>{{ $plan->planType->name ?? 'Sin tipo' }}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                    <span>{{ $plan->area->name ?? 'Sin área' }}</span>
+                </div>
+                @if($plan->manager)
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                        <span>Manager: {{ $plan->manager->name }}</span>
+                    </div>
+                @endif
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- Estadísticas Rápidas -->
-<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-    <x-ui.card variant="gradient" border-color="blue">
-        <div class="text-center">
-            <p class="text-blue-100 text-xs font-medium uppercase tracking-wide">KPIs</p>
-            <p class="text-3xl font-bold mt-1 text-white">{{ $plan->kpis->count() }}</p>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500 hover:shadow-lg transition-shadow">
+        <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+            </div>
         </div>
-    </x-ui.card>
+        <p class="text-gray-600 text-sm font-medium mb-2">KPIs</p>
+        <p class="text-4xl font-bold text-gray-900 mb-3">{{ $plan->kpis->count() }}</p>
+        <div class="flex items-center gap-2">
+            <span class="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-lg">Indicadores clave</span>
+        </div>
+    </div>
     
-    <x-ui.card variant="gradient" border-color="green">
-        <div class="text-center">
-            <p class="text-green-100 text-xs font-medium uppercase tracking-wide">Hitos</p>
-            <p class="text-3xl font-bold mt-1 text-white">{{ $plan->milestones->count() }}</p>
+    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500 hover:shadow-lg transition-shadow">
+        <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
         </div>
-    </x-ui.card>
+        <p class="text-gray-600 text-sm font-medium mb-2">Hitos</p>
+        <p class="text-4xl font-bold text-gray-900 mb-3">{{ $plan->milestones->count() }}</p>
+        <div class="flex items-center gap-2">
+            <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-lg">Marcos temporales</span>
+        </div>
+    </div>
     
-    <x-ui.card variant="gradient" border-color="orange">
-        <div class="text-center">
-            <p class="text-orange-100 text-xs font-medium uppercase tracking-wide">Tareas</p>
-            <p class="text-3xl font-bold mt-1 text-white">{{ $plan->tasks->count() }}</p>
+    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-orange-500 hover:shadow-lg transition-shadow">
+        <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+            </div>
         </div>
-    </x-ui.card>
+        <p class="text-gray-600 text-sm font-medium mb-2">Tareas</p>
+        <p class="text-4xl font-bold text-gray-900 mb-3">{{ $plan->tasks->count() }}</p>
+        <div class="flex items-center gap-2">
+            <span class="px-3 py-1 bg-orange-100 text-orange-800 text-xs font-semibold rounded-lg">Acciones pendientes</span>
+        </div>
+    </div>
     
-    <x-ui.card variant="gradient" border-color="red">
-        <div class="text-center">
-            <p class="text-red-100 text-xs font-medium uppercase tracking-wide">Riesgos</p>
-            <p class="text-3xl font-bold mt-1 text-white">{{ $plan->risks->count() }}</p>
+    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-red-500 hover:shadow-lg transition-shadow">
+        <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+            </div>
         </div>
-    </x-ui.card>
+        <p class="text-gray-600 text-sm font-medium mb-2">Riesgos</p>
+        <p class="text-4xl font-bold text-gray-900 mb-3">{{ $plan->risks->count() }}</p>
+        <div class="flex items-center gap-2">
+            <span class="px-3 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-lg">Identificados</span>
+        </div>
+    </div>
 </div>
 
 <!-- Tabs de Navegación -->
 <div class="mb-6" x-data="{ activeTab: 'overview' }">
-    <div class="border-b border-gray-200">
-        <nav class="flex space-x-8">
+    <div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-2 border border-gray-200">
+        <nav class="flex flex-wrap gap-2">
             <button @click="activeTab = 'overview'" 
-                    :class="activeTab === 'overview' ? 'border-red-500 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                    :class="activeTab === 'overview' ? 'bg-gradient-to-r from-red-600 to-orange-600 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'"
+                    class="whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
                 Resumen
             </button>
             <button @click="activeTab = 'sections'" 
-                    :class="activeTab === 'sections' ? 'border-red-500 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                    :class="activeTab === 'sections' ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'"
+                    class="whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
                 Secciones
             </button>
             <button @click="activeTab = 'kpis'" 
-                    :class="activeTab === 'kpis' ? 'border-red-500 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                    :class="activeTab === 'kpis' ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'"
+                    class="whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
                 KPIs
             </button>
             <button @click="activeTab = 'milestones'" 
-                    :class="activeTab === 'milestones' ? 'border-red-500 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                    :class="activeTab === 'milestones' ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'"
+                    class="whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
                 Hitos
             </button>
             <button @click="activeTab = 'tasks'" 
-                    :class="activeTab === 'tasks' ? 'border-red-500 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                    :class="activeTab === 'tasks' ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'"
+                    class="whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
                 Tareas
             </button>
             <button @click="activeTab = 'risks'" 
-                    :class="activeTab === 'risks' ? 'border-red-500 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                    :class="activeTab === 'risks' ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'"
+                    class="whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
                 Riesgos
             </button>
         </nav>
@@ -164,48 +228,37 @@
     
     <!-- Tab Content: Overview -->
     <div x-show="activeTab === 'overview'" class="mt-6">
-        <x-ui.card>
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Información General</h2>
-            <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Fecha de Inicio</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ $plan->start_date ? $plan->start_date->format('d/m/Y') : 'No definida' }}</dd>
+        <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-red-500">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                    ℹ️
                 </div>
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Fecha Objetivo</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ $plan->target_date ? $plan->target_date->format('d/m/Y') : 'No definida' }}</dd>
+                <h2 class="text-2xl font-bold text-gray-800">Información General</h2>
+            </div>
+            <dl class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-200">
+                    <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Fecha de Inicio</dt>
+                    <dd class="text-base font-semibold text-gray-900">{{ $plan->start_date ? $plan->start_date->format('d/m/Y') : 'No definida' }}</dd>
                 </div>
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Versión</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ $plan->version ?? '1.0' }}</dd>
+                <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-200">
+                    <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Fecha Objetivo</dt>
+                    <dd class="text-base font-semibold text-gray-900">{{ $plan->target_date ? $plan->target_date->format('d/m/Y') : 'No definida' }}</dd>
                 </div>
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Director</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ $plan->director->name ?? 'No asignado' }}</dd>
+                <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-200">
+                    <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Versión</dt>
+                    <dd class="text-base font-semibold text-gray-900">{{ $plan->version ?? '1.0' }}</dd>
+                </div>
+                <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-200">
+                    <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Director</dt>
+                    <dd class="text-base font-semibold text-gray-900">{{ $plan->director->name ?? 'No asignado' }}</dd>
                 </div>
             </dl>
-        </x-ui.card>
+        </div>
     </div>
     
     <!-- Tab Content: Sections -->
     <div x-show="activeTab === 'sections'" class="mt-6" style="display: none;">
-        <x-ui.card>
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-xl font-bold text-gray-800">Secciones del Plan</h2>
-            </div>
-            @if($plan->sections->count() > 0)
-                <div class="space-y-4">
-                    @foreach($plan->sections as $section)
-                        <div class="border-l-4 border-red-500 pl-4 py-2">
-                            <h3 class="font-semibold text-gray-900">{{ $section->title }}</h3>
-                            <p class="text-sm text-gray-600 mt-1">{{ \Illuminate\Support\Str::limit($section->content ?? '', 200) }}</p>
-                        </div>
-                    @endforeach
-                </div>
-            @else
-                <p class="text-sm text-gray-500 text-center py-8">No hay secciones definidas aún</p>
-            @endif
-        </x-ui.card>
+        @livewire('plans.plan-section-editor', ['plan' => $plan], key('section-editor-' . $plan->id))
     </div>
     
     <!-- Tab Content: KPIs -->

@@ -164,7 +164,14 @@
     </x-ui.card>
     
     <x-ui.card>
-        <h2 class="text-xl font-bold text-gray-800 mb-4">Historial</h2>
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-bold text-gray-800">Historial</h2>
+            @can('update', $kpi)
+                <a href="{{ route('kpis.history.index', $kpi) }}" class="text-sm text-red-600 hover:text-red-700 font-medium">
+                    Ver completo →
+                </a>
+            @endcan
+        </div>
         @if($kpi->history->count() > 0)
             <div class="space-y-3 max-h-96 overflow-y-auto">
                 @foreach($kpi->history->take(10) as $history)
@@ -189,5 +196,17 @@
         @endif
     </x-ui.card>
 </div>
+
+<!-- Gráfico de Evolución -->
+<div class="mb-8">
+    @livewire('kpis.kpi-chart', ['kpi' => $kpi])
+</div>
+
+<!-- Actualizador Rápido -->
+@can('update', $kpi)
+    <div class="mb-8">
+        @livewire('kpis.kpi-updater', ['kpi' => $kpi])
+    </div>
+@endcan
 @endsection
 

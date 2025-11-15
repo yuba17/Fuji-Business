@@ -62,13 +62,16 @@
                 <div 
                     class="flex-1 bg-gray-50 border-x border-b {{ $borderClass }} rounded-b-lg p-4 min-h-[400px] space-y-3"
                     data-status="{{ $status }}"
-                    x-on:dragover.prevent
-                    x-on:drop.prevent="handleColumnDrop($event, '{{ $status }}')">
+                    x-on:dragover.prevent="event.dataTransfer.dropEffect = 'move'"
+                    x-on:dragenter.prevent="event.currentTarget.classList.add('bg-opacity-50')"
+                    x-on:dragleave.prevent="event.currentTarget.classList.remove('bg-opacity-50')"
+                    x-on:drop.prevent="handleColumnDrop($event, '{{ $status }}'); event.currentTarget.classList.remove('bg-opacity-50')">
                     
                     @forelse($tasks[$status] as $task)
                         <div 
                             draggable="true"
                             data-task-id="{{ $task->id }}"
+                            data-task-order="{{ $task->order ?? 0 }}"
                             x-on:dragstart="handleDragStart($event, {{ $task->id }}, '{{ $status }}')"
                             x-on:dragend="handleDragEnd($event)"
                             class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 cursor-move hover:shadow-md transition-shadow"
@@ -95,6 +98,26 @@
                                     {{ $task->title }}
                                 </a>
                             </h4>
+                            
+                            <!-- Subtareas -->
+                            @if($task->subtasks && $task->subtasks->count() > 0)
+                                <div class="mb-2 flex items-center gap-2 text-xs text-gray-500">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                                    </svg>
+                                    <span>{{ $task->subtasks->count() }} subtarea{{ $task->subtasks->count() > 1 ? 's' : '' }}</span>
+                                    @php
+                                        $completedSubtasks = $task->subtasks->where('status', 'done')->count();
+                                        $totalSubtasks = $task->subtasks->count();
+                                    @endphp
+                                    @if($totalSubtasks > 0)
+                                        <span class="text-gray-400">•</span>
+                                        <span class="{{ $completedSubtasks === $totalSubtasks ? 'text-green-600' : 'text-gray-600' }}">
+                                            {{ $completedSubtasks }}/{{ $totalSubtasks }} completadas
+                                        </span>
+                                    @endif
+                                </div>
+                            @endif
                             
                             <!-- Información adicional -->
                             <div class="space-y-1 text-xs text-gray-500">
@@ -170,18 +193,65 @@ function kanbanBoard() {
         handleColumnDrop(event, newStatus) {
             if (!this.draggedTaskId) return;
             
+            event.preventDefault();
             const taskId = this.draggedTaskId;
             const oldStatus = this.draggedFromStatus;
             
-            if (oldStatus === newStatus) {
-                this.draggedTaskId = null;
-                this.draggedFromStatus = null;
-                return;
+            // Obtener el índice de inserción basado en la posición del drop
+            const dropZone = event.currentTarget;
+            const tasks = Array.from(dropZone.querySelectorAll('[data-task-id]'));
+            
+            // Encontrar la tarea después de la cual insertar
+            let insertAfterIndex = -1;
+            for (let i = 0; i < tasks.length; i++) {
+                const rect = tasks[i].getBoundingClientRect();
+                if (event.clientY < rect.top + rect.height / 2) {
+                    insertAfterIndex = i - 1;
+                    break;
+                }
             }
             
-            // Actualizar estado via Livewire
-            @this.updateTaskStatus(taskId, newStatus);
+            // Si no se encontró posición, insertar al final
+            if (insertAfterIndex === -1) {
+                insertAfterIndex = tasks.length - 1;
+            }
             
+            // Calcular el nuevo orden basado en la posición
+            let newOrder;
+            if (tasks.length === 0) {
+                newOrder = 1;
+            } else if (insertAfterIndex < 0) {
+                // Insertar al principio
+                const firstTaskOrder = parseInt(tasks[0].getAttribute('data-task-order')) || 1;
+                newOrder = Math.max(1, firstTaskOrder - 1);
+            } else if (insertAfterIndex >= tasks.length - 1) {
+                // Insertar al final
+                const lastTask = tasks[tasks.length - 1];
+                const lastTaskOrder = parseInt(lastTask.getAttribute('data-task-order')) || tasks.length;
+                newOrder = lastTaskOrder + 1;
+            } else {
+                // Insertar entre dos tareas
+                const beforeTask = tasks[insertAfterIndex];
+                const afterTask = tasks[insertAfterIndex + 1];
+                const beforeOrder = parseInt(beforeTask.getAttribute('data-task-order')) || (insertAfterIndex + 1);
+                const afterOrder = parseInt(afterTask.getAttribute('data-task-order')) || (insertAfterIndex + 2);
+                newOrder = Math.floor((beforeOrder + afterOrder) / 2);
+                // Si el orden es el mismo, incrementar
+                if (newOrder === beforeOrder) {
+                    newOrder = beforeOrder + 1;
+                }
+            }
+            
+            // Actualizar estado y orden via Livewire
+            @this.updateTaskStatus(taskId, newStatus, newOrder);
+            
+            this.draggedTaskId = null;
+            this.draggedFromStatus = null;
+        },
+        
+        handleDrop(event, taskId, newStatus, newOrder) {
+            // Método para manejar drops específicos con orden
+            @this.updateTaskOrder(taskId, newStatus, newOrder, this.draggedFromStatus);
             this.draggedTaskId = null;
             this.draggedFromStatus = null;
         }

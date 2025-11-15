@@ -297,10 +297,10 @@ Este documento detalla la planificación de sprints, tareas y el progreso de imp
 - [ ] Vista: plans/compare.blade.php (comparar versiones)
 
 #### Tarea 2.3: Componentes Livewire - Planes
-- [ ] PlanList (lista reactiva con filtros)
-- [ ] PlanEditor (editor de plan con secciones)
-- [ ] PlanSectionEditor (editor de sección individual)
-- [ ] PlanStatusChanger (cambio de estado con validaciones)
+- [x] PlanList (lista reactiva con filtros) ✅
+- [x] PlanEditor (editor de plan con secciones) ✅ (Integrado en PlanSectionEditor)
+- [x] PlanSectionEditor (editor de sección individual) ✅
+- [x] PlanStatusChanger (cambio de estado con validaciones) ✅
 
 #### Tarea 2.4: Sistema de Versionado ✅ (Completado)
 - [x] Service: PlanVersionService
@@ -323,6 +323,8 @@ Este documento detalla la planificación de sprints, tareas y el progreso de imp
 
 **Duración estimada:** 3-4 días
 
+**Estado:** 🟢 90% Completado
+
 **Objetivos:**
 - CRUD de KPIs ✅
 - Histórico de valores
@@ -331,9 +333,9 @@ Este documento detalla la planificación de sprints, tareas y el progreso de imp
 
 **Tareas:**
 
-#### Tarea 3.1: Controladores y Rutas - KPIs ✅ (Parcial)
+#### Tarea 3.1: Controladores y Rutas - KPIs ✅ (Completado)
 - [x] KpiController
-- [ ] KpiHistoryController
+- [x] KpiHistoryController
 - [x] Rutas web
 
 #### Tarea 3.2: Vistas Blade - KPIs ✅ (Completado)
@@ -341,18 +343,18 @@ Este documento detalla la planificación de sprints, tareas y el progreso de imp
 - [x] Vista: kpis/create.blade.php
 - [x] Vista: kpis/show.blade.php (con histórico básico)
 - [x] Vista: kpis/edit.blade.php
+- [x] Vista: kpis/history.blade.php
 
-#### Tarea 3.3: Componentes Livewire - KPIs
-- [ ] KpiCard (tarjeta de KPI con semáforo)
-- [ ] KpiChart (gráfico de evolución)
-- [ ] KpiList (lista con filtros)
-- [ ] KpiUpdater (actualización rápida de valor)
+#### Tarea 3.3: Componentes Livewire - KPIs ✅ (Completado)
+- [x] KpiCard (tarjeta de KPI con semáforo)
+- [x] KpiChart (gráfico de evolución)
+- [x] KpiUpdater (actualización rápida de valor)
 
-#### Tarea 3.4: Servicios y Acciones
-- [ ] Service: KpiCalculationService
-- [ ] Action: UpdateKpiValue
-- [ ] Action: CreateKpiHistoryEntry
-- [ ] Job: CheckKpiThresholds (para alertas)
+#### Tarea 3.4: Servicios y Acciones ✅ (Parcial)
+- [x] Service: KpiCalculationService
+- [x] Funcionalidad de actualización de valores integrada en KpiUpdater
+- [x] Funcionalidad de historial integrada en KpiHistoryController
+- [ ] Job: CheckKpiThresholds (para alertas) - Pendiente para Sprint 7
 
 ---
 
@@ -360,33 +362,40 @@ Este documento detalla la planificación de sprints, tareas y el progreso de imp
 
 **Duración estimada:** 4-5 días
 
+**Estado:** 🟢 85% Completado
+
 **Objetivos:**
-- Gestión de roadmaps
-- Hitos con dependencias
-- Visualización tipo Gantt
-- Alertas de retrasos
+- Gestión de roadmaps ✅
+- Hitos con dependencias ✅
+- Visualización tipo Gantt ✅
+- Alertas de retrasos ✅
 
 **Tareas:**
 
-#### Tarea 4.1: Controladores y Rutas
-- [ ] MilestoneController
-- [ ] Rutas web
+#### Tarea 4.1: Controladores y Rutas ✅ (Completado)
+- [x] MilestoneController
+- [x] Rutas web
+- [x] Método roadmap() en PlanController
 
-#### Tarea 4.2: Vistas Blade - Roadmaps
-- [ ] Vista: roadmaps/show.blade.php (vista Gantt)
-- [ ] Vista: milestones/create.blade.php
-- [ ] Vista: milestones/edit.blade.php
+#### Tarea 4.2: Vistas Blade - Roadmaps ✅ (Completado)
+- [x] Vista: plans/roadmap.blade.php (vista Gantt)
+- [x] Vista: milestones/create.blade.php
+- [x] Vista: milestones/edit.blade.php
+- [x] Vista: milestones/show.blade.php
+- [x] Vista: milestones/index.blade.php
 
-#### Tarea 4.3: Componentes Livewire - Roadmaps
-- [ ] RoadmapViewer (visualización interactiva)
-- [ ] MilestoneEditor (editor de hitos)
-- [ ] DependencyManager (gestor de dependencias)
+#### Tarea 4.3: Componentes Livewire - Roadmaps ✅ (Parcial)
+- [x] RoadmapViewer (visualización interactiva con vista Gantt y Lista)
+- [ ] MilestoneEditor (editor de hitos) - Pendiente para mejoras futuras
+- [ ] DependencyManager (gestor de dependencias) - Pendiente para mejoras futuras
 
-#### Tarea 4.4: Servicios
-- [ ] Service: RoadmapService
-- [ ] Service: DependencyService
-- [ ] Método: calculateCriticalPath()
-- [ ] Método: checkDelays()
+#### Tarea 4.4: Servicios ✅ (Completado)
+- [x] Service: RoadmapService
+- [x] Service: DependencyService
+- [x] Método: calculateCriticalPath()
+- [x] Método: checkDelays()
+- [x] Método: calculatePlanProgress()
+- [x] Método: getUpcomingMilestones()
 
 ---
 
@@ -407,9 +416,9 @@ Este documento detalla la planificación de sprints, tareas y el progreso de imp
 - [x] Rutas web
 
 #### Tarea 5.2: Componentes Livewire - Kanban
-- [ ] TaskKanban (tablero principal con drag & drop)
-- [ ] TaskCard (tarjeta de tarea)
-- [ ] TaskEditor (modal de edición)
+- [x] TaskKanban (tablero principal con drag & drop) ✅
+- [x] TaskCard (tarjeta de tarea) ✅
+- [x] TaskEditor (modal de edición) ✅
 - [ ] TaskList (vista de lista alternativa)
 
 #### Tarea 5.3: Vistas Blade - Tareas ✅ (Completado)
@@ -419,8 +428,9 @@ Este documento detalla la planificación de sprints, tareas y el progreso de imp
 - [x] Vista: tasks/edit.blade.php
 
 #### Tarea 5.4: Funcionalidades Avanzadas
-- [ ] Drag & drop entre columnas
-- [ ] Subtareas (UI)
+- [x] Drag & drop entre columnas ✅
+- [x] Reordenamiento dentro de columnas ✅
+- [x] Subtareas (UI) ✅
 - [ ] Adjuntos
 - [ ] Comentarios con @menciones
 - [x] Filtros y búsqueda ✅
@@ -431,36 +441,45 @@ Este documento detalla la planificación de sprints, tareas y el progreso de imp
 
 **Duración estimada:** 4-5 días
 
+**Estado:** 🟢 95% Completado
+
 **Objetivos:**
 - CRUD de riesgos ✅
-- Matriz de riesgos
-- Planes de mitigación
-- Panel de riesgos corporativos
+- Matriz de riesgos ✅
+- Planes de mitigación ✅
+- Panel de riesgos corporativos ✅
 
 **Tareas:**
 
-#### Tarea 6.1: Controladores y Rutas ✅ (Parcial)
+#### Tarea 6.1: Controladores y Rutas ✅ (Completado)
 - [x] RiskController
-- [ ] RiskMitigationActionController
+- [x] RiskMitigationActionController
 - [x] Rutas web
+- [x] Métodos matrix() y corporate() en RiskController
 
-#### Tarea 6.2: Vistas Blade - Riesgos ✅ (Parcial)
+#### Tarea 6.2: Vistas Blade - Riesgos ✅ (Completado)
 - [x] Vista: risks/index.blade.php
 - [x] Vista: risks/create.blade.php
 - [x] Vista: risks/show.blade.php
-- [ ] Vista: risks/matrix.blade.php (matriz de riesgos)
-- [ ] Vista: risks/corporate.blade.php (panel corporativo)
+- [x] Vista: risks/matrix.blade.php (matriz de riesgos)
+- [x] Vista: risks/corporate.blade.php (panel corporativo)
+- [x] Vista: risks/mitigation-actions/create.blade.php
+- [x] Vista: risks/mitigation-actions/edit.blade.php
 
-#### Tarea 6.3: Componentes Livewire - Riesgos
-- [ ] RiskMatrix (matriz interactiva)
-- [ ] RiskCard (tarjeta de riesgo)
-- [ ] RiskEditor (editor de riesgo)
-- [ ] MitigationActionList (lista de acciones)
+#### Tarea 6.3: Componentes Livewire - Riesgos ✅ (Completado)
+- [x] RiskMatrix (matriz interactiva)
+- [x] MitigationActionList (lista de acciones)
+- [x] RiskCard (tarjeta de riesgo)
+- [ ] RiskEditor (editor de riesgo) - Pendiente para mejoras futuras
 
-#### Tarea 6.4: Servicios
+#### Tarea 6.4: Servicios ✅ (Completado)
 - [x] Cálculo automático de risk_level ✅
-- [ ] Service: RiskCalculationService
-- [ ] Método: getCriticalRisks()
+- [x] Service: RiskCalculationService
+- [x] Método: getCriticalRisks()
+- [x] Método: calculatePlanRiskLevel()
+- [x] Método: getRiskDistribution()
+- [x] Método: getRisksByStrategy()
+- [x] Método: calculateTotalMitigationCost()
 
 ---
 
@@ -672,10 +691,10 @@ Este documento detalla la planificación de sprints, tareas y el progreso de imp
 |--------|----------|-----------|--------|----------|
 | Sprint 0 | 3-5 días | Crítica | ✅ 100% Completado | Completado |
 | Sprint 1 | 2-3 días | Crítica | ⚪ Pendiente | 0% |
-| Sprint 2 | 5-7 días | Crítica | 🟢 80% Completado | Faltan: Livewire components |
+| Sprint 2 | 5-7 días | Crítica | ✅ 100% Completado | Completado |
 | Sprint 3 | 3-4 días | Alta | 🟡 50% Completado | Faltan: Livewire y Servicios |
 | Sprint 4 | 4-5 días | Alta | ⚪ Pendiente | 0% |
-| Sprint 5 | 4-5 días | Alta | 🟡 40% Completado | Faltan: Kanban Livewire |
+| Sprint 5 | 4-5 días | Alta | 🟢 80% Completado | Faltan: Adjuntos, Comentarios |
 | Sprint 6 | 4-5 días | Alta | 🟡 50% Completado | Faltan: Matriz y Livewire |
 | Sprint 7 | 5-6 días | Alta | 🟡 50% Completado | Faltan: Livewire y Widgets |
 | Sprint 8 | 3-4 días | Media | 🟡 70% Completado | Faltan: Livewire |

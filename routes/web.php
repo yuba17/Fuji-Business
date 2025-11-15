@@ -34,6 +34,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Plans
     Route::resource('plans', App\Http\Controllers\PlanController::class);
+    Route::get('plans/{plan}/roadmap', [App\Http\Controllers\PlanController::class, 'roadmap'])->name('plans.roadmap');
     Route::get('plans/{plan}/versions', [App\Http\Controllers\PlanVersionController::class, 'index'])->name('plans.versions');
     Route::post('plans/{plan}/versions', [App\Http\Controllers\PlanVersionController::class, 'store'])->name('plans.versions.store');
     Route::get('plans/{plan}/versions/{version}', [App\Http\Controllers\PlanVersionController::class, 'show'])->name('plans.versions.show');
@@ -42,6 +43,9 @@ Route::middleware(['auth'])->group(function () {
     
     // KPIs
     Route::resource('kpis', App\Http\Controllers\KpiController::class);
+    Route::get('kpis/{kpi}/history', [App\Http\Controllers\KpiHistoryController::class, 'index'])->name('kpis.history.index');
+    Route::post('kpis/{kpi}/history', [App\Http\Controllers\KpiHistoryController::class, 'store'])->name('kpis.history.store');
+    Route::delete('kpis/{kpi}/history/{history}', [App\Http\Controllers\KpiHistoryController::class, 'destroy'])->name('kpis.history.destroy');
     
     // Tasks
     Route::get('tasks/kanban', [App\Http\Controllers\TaskController::class, 'kanban'])->name('tasks.kanban');
@@ -49,6 +53,9 @@ Route::middleware(['auth'])->group(function () {
     
     // Risks
     Route::resource('risks', App\Http\Controllers\RiskController::class);
+    Route::get('risks/matrix', [App\Http\Controllers\RiskController::class, 'matrix'])->name('risks.matrix');
+    Route::get('risks/corporate', [App\Http\Controllers\RiskController::class, 'corporate'])->name('risks.corporate');
+    Route::resource('risks.mitigation-actions', App\Http\Controllers\RiskMitigationActionController::class)->except(['index', 'show']);
     
     // Decisions
     Route::resource('decisions', App\Http\Controllers\DecisionController::class);
@@ -58,4 +65,8 @@ Route::middleware(['auth'])->group(function () {
     
     // Projects
     Route::resource('projects', App\Http\Controllers\ProjectController::class);
+    
+    // Milestones (nested under plans)
+    Route::resource('plans.milestones', App\Http\Controllers\MilestoneController::class)->except(['index']);
+    Route::get('plans/{plan}/milestones', [App\Http\Controllers\MilestoneController::class, 'index'])->name('plans.milestones.index');
 });

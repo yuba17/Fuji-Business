@@ -38,7 +38,7 @@ class TaskKanban extends Component
         }
     }
 
-    public function updateTaskStatus($taskId, $newStatus)
+    public function updateTaskStatus($taskId, $newStatus, $newOrder = null)
     {
         $task = Task::findOrFail($taskId);
         
@@ -48,19 +48,29 @@ class TaskKanban extends Component
             return;
         }
         
-        $task->update(['status' => $newStatus]);
+        $oldStatus = $task->status;
         
-        $this->dispatch('taskUpdated');
-        session()->flash('success', 'Tarea actualizada correctamente');
-    }
-
-    public function updateTaskOrder($taskId, $newStatus, $newOrder)
-    {
-        $task = Task::findOrFail($taskId);
-        
-        if (!Auth::user()->can('update', $task)) {
-            return;
+        // Si no se especifica orden, ponerlo al final de la nueva columna
+        if ($newOrder === null) {
+            $maxOrder = Task::where('status', $newStatus)
+                ->where('id', '!=', $taskId)
+                ->max('order') ?? 0;
+            $newOrder = $maxOrder + 1;
         }
+        
+        // Si cambió de columna, reordenar la columna antigua
+        if ($oldStatus !== $newStatus) {
+            Task::where('status', $oldStatus)
+                ->where('id', '!=', $taskId)
+                ->where('order', '>', $task->order)
+                ->decrement('order');
+        }
+        
+        // Reordenar la columna nueva
+        Task::where('status', $newStatus)
+            ->where('id', '!=', $taskId)
+            ->where('order', '>=', $newOrder)
+            ->increment('order');
         
         // Actualizar estado y orden
         $task->update([
@@ -68,20 +78,53 @@ class TaskKanban extends Component
             'order' => $newOrder,
         ]);
         
-        // Reordenar otras tareas en la misma columna
+        $this->dispatch('taskUpdated');
+        session()->flash('success', 'Tarea actualizada correctamente');
+    }
+
+    public function updateTaskOrder($taskId, $newStatus, $newOrder, $oldStatus = null)
+    {
+        $task = Task::findOrFail($taskId);
+        
+        if (!Auth::user()->can('update', $task)) {
+            session()->flash('error', 'No tienes permisos para actualizar esta tarea');
+            return;
+        }
+        
+        $oldStatus = $oldStatus ?? $task->status;
+        
+        // Si cambió de columna, reordenar la columna antigua
+        if ($oldStatus !== $newStatus) {
+            Task::where('status', $oldStatus)
+                ->where('id', '!=', $taskId)
+                ->where('order', '>', $task->order)
+                ->decrement('order');
+        }
+        
+        // Reordenar la columna nueva
         Task::where('status', $newStatus)
             ->where('id', '!=', $taskId)
             ->where('order', '>=', $newOrder)
             ->increment('order');
+        
+        // Actualizar estado y orden de la tarea
+        $task->update([
+            'status' => $newStatus,
+            'order' => $newOrder,
+        ]);
+        
+        $this->dispatch('taskUpdated');
+        session()->flash('success', 'Tarea actualizada correctamente');
     }
 
     public function getTasksProperty()
     {
         $user = Auth::user();
         
-        $query = Task::with(['plan', 'area', 'assignedUser', 'milestone'])
-            ->orderBy('order')
-            ->orderBy('created_at');
+        $query = Task::with(['plan', 'area', 'assignedUser', 'milestone', 'subtasks'])
+            ->whereNull('parent_task_id') // Solo mostrar tareas principales, no subtareas
+            ->orderBy('order', 'asc')
+            ->orderBy('created_at', 'asc');
         
         // Filtrar según rol
         if ($user->isManager()) {

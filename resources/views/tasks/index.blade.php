@@ -47,16 +47,31 @@
 @endsection
 
 @section('content')
+<!-- Header Limpio y Moderno -->
 <div class="mb-8">
-    <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent break-words">
-        ✅ Tareas
-    </h1>
-    <p class="text-gray-600 mt-2">Gestiona tus tareas y seguimiento de trabajo</p>
+    <div class="bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 rounded-2xl shadow-lg p-8 text-white relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent"></div>
+        <div class="relative z-10">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-6">
+                    <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-4xl font-bold mb-2">Tareas</h1>
+                        <p class="text-green-50 text-sm">Gestiona tus tareas y seguimiento de trabajo</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Filtros -->
 <div class="mb-6">
-    <x-ui.card variant="compact">
+    <div class="bg-white rounded-xl shadow-md p-6">
         <form method="GET" action="{{ route('tasks.index') }}" class="flex flex-wrap items-center gap-4">
             <div class="flex-1 min-w-[200px]">
                 <x-ui.input 
@@ -100,14 +115,14 @@
                 </x-ui.button>
             </div>
         </form>
-    </x-ui.card>
+    </div>
 </div>
 
 <!-- Lista de Tareas -->
 @if($tasks->count() > 0)
     <div class="space-y-4">
         @foreach($tasks as $task)
-            <x-ui.card class="hover:shadow-lg transition-shadow cursor-pointer" onclick="window.location.href='{{ route('tasks.show', $task) }}'">
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg hover:border-green-300 transition-all cursor-pointer" onclick="window.location.href='{{ route('tasks.show', $task) }}'">
                 <div class="flex items-start justify-between">
                     <div class="flex-1">
                         <div class="flex items-center gap-3 mb-2">
@@ -166,7 +181,7 @@
                         Ver →
                     </a>
                 </div>
-            </x-ui.card>
+            </div>
         @endforeach
     </div>
     
@@ -175,19 +190,21 @@
         {{ $tasks->links() }}
     </div>
 @else
-    <x-ui.card>
+    <div class="bg-white rounded-xl shadow-md p-6">
         <div class="text-center py-12 text-gray-500">
-            <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-            </svg>
-            <p class="text-sm mb-4">No hay tareas creadas aún</p>
+            <div class="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+            </div>
+            <p class="text-sm mb-4 font-medium">No hay tareas creadas aún</p>
             @if(auth()->user()->isDirector() || auth()->user()->isManager() || auth()->user()->isTecnico())
-                <x-ui.button href="{{ route('tasks.create') }}" variant="primary">
+                <a href="{{ route('tasks.create') }}" class="inline-block px-6 py-3 text-sm font-semibold bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all shadow-sm">
                     Crear Primera Tarea
-                </x-ui.button>
+                </a>
             @endif
         </div>
-    </x-ui.card>
+    </div>
 @endif
 @endsection
 

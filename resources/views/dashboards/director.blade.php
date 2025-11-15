@@ -18,155 +18,233 @@
 @endsection
 
 @section('content')
+<div x-data="directorDashboard()" x-cloak>
+<!-- Header Ejecutivo - Diseño Limpio y Moderno -->
 <div class="mb-8">
-    <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent break-words">
-        ⚡ Dashboard Director
-    </h1>
-    <p class="text-gray-600 mt-2">Vista general de todos los planes, áreas y métricas</p>
+    <div class="bg-gradient-to-r from-red-500 via-orange-500 to-red-600 rounded-2xl shadow-lg p-8 text-white relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent"></div>
+        <div class="relative z-10">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-6">
+                    <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-4xl font-bold mb-2">Dashboard Ejecutivo</h1>
+                        <p class="text-red-50 text-sm">Vista general de planes estratégicos, métricas y áreas de responsabilidad</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- Estadísticas Principales -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-    <x-ui.card variant="gradient" border-color="blue">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-blue-100 text-xs font-medium uppercase tracking-wide">Total Planes</p>
-                <p class="text-3xl font-bold mt-1 text-white">{{ $total_plans }}</p>
-                <p class="text-blue-100 text-xs mt-0.5">{{ $active_plans }} activos</p>
+<!-- Estadísticas Principales - Diseño Limpio con Fondos Blancos -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Total Planes -->
+    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500 hover:shadow-lg transition-shadow">
+        <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
             </div>
-            <svg class="w-12 h-12 opacity-80" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
-                <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"></path>
-            </svg>
         </div>
-    </x-ui.card>
+        <p class="text-gray-600 text-sm font-medium mb-2">Total Planes</p>
+        <p class="text-4xl font-bold text-gray-900 mb-3">{{ $total_plans }}</p>
+        <div class="flex items-center gap-2">
+            <span class="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-lg">{{ $active_plans }} activos</span>
+        </div>
+    </div>
 
-    <x-ui.card variant="gradient" border-color="green">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-green-100 text-xs font-medium uppercase tracking-wide">KPIs Activos</p>
-                <p class="text-3xl font-bold mt-1 text-white">{{ $total_kpis }}</p>
-                <p class="text-green-100 text-xs mt-0.5">En seguimiento</p>
+    <!-- KPIs Activos -->
+    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500 hover:shadow-lg transition-shadow">
+        <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
             </div>
-            <svg class="w-12 h-12 opacity-80" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"></path>
-            </svg>
         </div>
-    </x-ui.card>
+        <p class="text-gray-600 text-sm font-medium mb-2">KPIs Activos</p>
+        <p class="text-4xl font-bold text-gray-900 mb-3">{{ $total_kpis }}</p>
+        <div class="flex items-center gap-2">
+            <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-lg">En seguimiento</span>
+        </div>
+    </div>
 
-    <x-ui.card variant="gradient" border-color="orange">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-orange-100 text-xs font-medium uppercase tracking-wide">Riesgos Críticos</p>
-                <p class="text-3xl font-bold mt-1 text-white">{{ $critical_risks }}</p>
-                <p class="text-orange-100 text-xs mt-0.5">Requieren atención</p>
+    <!-- Riesgos Críticos -->
+    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-red-500 hover:shadow-lg transition-shadow">
+        <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
             </div>
-            <svg class="w-12 h-12 opacity-80" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-            </svg>
         </div>
-    </x-ui.card>
+        <p class="text-gray-600 text-sm font-medium mb-2">Riesgos Críticos</p>
+        <p class="text-4xl font-bold text-gray-900 mb-3">{{ $critical_risks }}</p>
+        <div class="flex items-center gap-2">
+            <span class="px-3 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-lg">Requieren atención</span>
+        </div>
+    </div>
 
-    <x-ui.card variant="gradient" border-color="purple">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-purple-100 text-xs font-medium uppercase tracking-wide">Tareas Pendientes</p>
-                <p class="text-3xl font-bold mt-1 text-white">{{ $pending_tasks }}</p>
-                <p class="text-purple-100 text-xs mt-0.5">Por completar</p>
+    <!-- Tareas Pendientes -->
+    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-orange-500 hover:shadow-lg transition-shadow">
+        <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
             </div>
-            <svg class="w-12 h-12 opacity-80" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
-            </svg>
         </div>
-    </x-ui.card>
+        <p class="text-gray-600 text-sm font-medium mb-2">Tareas Pendientes</p>
+        <p class="text-4xl font-bold text-gray-900 mb-3">{{ $pending_tasks }}</p>
+        <div class="flex items-center gap-2">
+            <span class="px-3 py-1 bg-orange-100 text-orange-800 text-xs font-semibold rounded-lg">Por completar</span>
+        </div>
+    </div>
 </div>
 
-<!-- Acciones Rápidas -->
+<!-- Acciones Rápidas - Diseño Limpio -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-    <x-ui.card>
-        <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
-                📊
+    <!-- Planes Estratégicos -->
+    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-red-500 hover:shadow-lg transition-shadow">
+        <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
             </div>
-            <h2 class="text-2xl font-bold text-gray-800">Planes</h2>
+            <div>
+                <h2 class="text-xl font-bold text-gray-900">Planes Estratégicos</h2>
+                <p class="text-sm text-gray-600">Gestión integral de planes</p>
+            </div>
         </div>
-        <p class="text-sm text-gray-600 mb-4">Gestiona todos los planes estratégicos, comerciales y de desarrollo interno.</p>
+        <p class="text-gray-700 text-sm mb-6">Gestiona todos los planes estratégicos, comerciales y de desarrollo interno de la organización.</p>
         <div class="flex gap-3">
-            <x-ui.button href="{{ route('plans.index') }}" variant="primary">
+            <a href="{{ route('plans.index') }}" class="flex-1 px-4 py-2.5 text-sm font-semibold bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-lg hover:from-red-700 hover:to-orange-700 transition-all text-center shadow-sm">
                 Ver Planes
-            </x-ui.button>
-            <x-ui.button href="{{ route('plans.create') }}" variant="secondary">
+            </a>
+            <a href="{{ route('plans.create') }}" class="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all text-center">
                 Crear Plan
-            </x-ui.button>
+            </a>
         </div>
-    </x-ui.card>
+    </div>
 
-    <x-ui.card>
-        <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">
-                📈
+    <!-- Indicadores KPIs -->
+    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500 hover:shadow-lg transition-shadow">
+        <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
             </div>
-            <h2 class="text-2xl font-bold text-gray-800">KPIs</h2>
+            <div>
+                <h2 class="text-xl font-bold text-gray-900">Indicadores KPIs</h2>
+                <p class="text-sm text-gray-600">Monitoreo y seguimiento</p>
+            </div>
         </div>
-        <p class="text-sm text-gray-600 mb-4">Monitorea los indicadores clave de rendimiento de todas las áreas.</p>
+        <p class="text-gray-700 text-sm mb-6">Monitorea los indicadores clave de rendimiento de todas las áreas y planes estratégicos.</p>
         <div class="flex gap-3">
-            <x-ui.button href="{{ route('kpis.index') }}" variant="primary">
+            <a href="{{ route('kpis.index') }}" class="flex-1 px-4 py-2.5 text-sm font-semibold bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all text-center shadow-sm">
                 Ver KPIs
-            </x-ui.button>
-            <x-ui.button href="{{ route('kpis.create') }}" variant="secondary">
+            </a>
+            <a href="{{ route('kpis.create') }}" class="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all text-center">
                 Crear KPI
-            </x-ui.button>
+            </a>
         </div>
-    </x-ui.card>
+    </div>
 </div>
 
-<!-- Planes Recientes -->
-<x-ui.card>
+<!-- Planes Recientes - Diseño Limpio -->
+<div class="bg-white rounded-xl shadow-md p-6">
     <div class="flex items-center justify-between mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">Planes Recientes</h2>
-        <x-ui.button href="{{ route('plans.index') }}" variant="secondary">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+            </div>
+            <h2 class="text-xl font-bold text-gray-900">Planes Recientes</h2>
+        </div>
+        <a href="{{ route('plans.index') }}" class="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all">
             Ver Todos
-        </x-ui.button>
+        </a>
     </div>
     
     @if($recent_plans->count() > 0)
         <div class="space-y-3">
             @foreach($recent_plans as $plan)
-                <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
-                    <div class="flex-1">
-                        <h3 class="font-semibold text-gray-900">{{ $plan->name }}</h3>
-                        <div class="flex items-center gap-3 mt-1 text-xs text-gray-500">
-                            <span>{{ $plan->planType->name ?? 'Sin tipo' }}</span>
-                            @if($plan->area)
-                                <span>• {{ $plan->area->name }}</span>
-                            @endif
-                            @if($plan->manager)
-                                <span>• {{ $plan->manager->name }}</span>
-                            @endif
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:border-red-300 hover:bg-gray-100 transition-all group">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <h3 class="font-semibold text-gray-900 group-hover:text-red-600 transition-colors">{{ $plan->name }}</h3>
+                                <x-ui.badge variant="{{ $plan->status === 'approved' ? 'success' : ($plan->status === 'in_progress' ? 'info' : 'warning') }}">
+                                    {{ $plan->status_label }}
+                                </x-ui.badge>
+                            </div>
+                            <div class="flex items-center gap-4 text-sm text-gray-600">
+                                <div class="flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                                    </svg>
+                                    <span class="font-medium">{{ $plan->planType->name ?? 'Sin tipo' }}</span>
+                                </div>
+                                @if($plan->area)
+                                    <div class="flex items-center gap-1.5">
+                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                        </svg>
+                                        <span class="font-medium">{{ $plan->area->name }}</span>
+                                    </div>
+                                @endif
+                                @if($plan->manager)
+                                    <div class="flex items-center gap-1.5">
+                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                        </svg>
+                                        <span class="font-medium">{{ $plan->manager->name }}</span>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <x-ui.badge variant="{{ $plan->status === 'approved' ? 'success' : ($plan->status === 'in_progress' ? 'info' : 'warning') }}">
-                            {{ $plan->status_label }}
-                        </x-ui.badge>
-                        <a href="{{ route('plans.show', $plan) }}" class="text-sm text-red-600 hover:text-red-700 font-medium">
-                            Ver →
+                        <a href="{{ route('plans.show', $plan) }}" class="ml-4 px-4 py-2 text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 rounded-lg border border-gray-300 transition-all flex items-center gap-2">
+                            Ver
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                            </svg>
                         </a>
                     </div>
                 </div>
             @endforeach
         </div>
     @else
-        <div class="text-center py-12 text-gray-500">
-            <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
-            <p class="text-sm">No hay planes creados aún</p>
-            <x-ui.button href="{{ route('plans.create') }}" variant="primary" class="mt-4">
+        <div class="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+            <div class="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+            </div>
+            <p class="text-gray-600 text-sm mb-4 font-medium">No hay planes creados aún</p>
+            <a href="{{ route('plans.create') }}" class="inline-block px-6 py-3 text-sm font-semibold bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-lg hover:from-red-700 hover:to-orange-700 transition-all shadow-sm">
                 Crear Primer Plan
-            </x-ui.button>
+            </a>
         </div>
     @endif
-</x-ui.card>
-@endsection
+</div>
+</div>
 
+<script>
+function directorDashboard() {
+    return {
+        init() {
+            // Inicialización si es necesaria
+        }
+    }
+}
+</script>
+@endsection
