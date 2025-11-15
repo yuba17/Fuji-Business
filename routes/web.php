@@ -15,6 +15,12 @@ Route::get('dashboard', [App\Http\Controllers\DashboardController::class, 'index
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+// Dashboard Customization
+Route::get('dashboards', [App\Http\Controllers\DashboardCustomizationController::class, 'index'])->name('dashboards.index');
+Route::get('dashboards/customize/{dashboard?}', [App\Http\Controllers\DashboardCustomizationController::class, 'customize'])->name('dashboards.customize');
+Route::post('dashboards', [App\Http\Controllers\DashboardCustomizationController::class, 'store'])->name('dashboards.store');
+Route::delete('dashboards/{dashboard}', [App\Http\Controllers\DashboardCustomizationController::class, 'destroy'])->name('dashboards.destroy');
+
 Route::middleware(['auth'])->group(function () {
     // Settings
     Route::redirect('settings', 'settings/profile');
@@ -50,6 +56,11 @@ Route::middleware(['auth'])->group(function () {
     // Tasks
     Route::get('tasks/kanban', [App\Http\Controllers\TaskController::class, 'kanban'])->name('tasks.kanban');
     Route::resource('tasks', App\Http\Controllers\TaskController::class);
+    Route::post('tasks/{task}/attachments', [App\Http\Controllers\TaskController::class, 'uploadAttachment'])->name('tasks.attachments.store');
+    Route::delete('tasks/{task}/attachments/{attachment}', [App\Http\Controllers\TaskController::class, 'deleteAttachment'])->name('tasks.attachments.destroy');
+    Route::get('tasks/{task}/attachments/{attachment}/download', [App\Http\Controllers\TaskController::class, 'downloadAttachment'])->name('tasks.attachments.download');
+    Route::post('tasks/{task}/comments', [App\Http\Controllers\TaskController::class, 'addComment'])->name('tasks.comments.store');
+    Route::delete('tasks/{task}/comments/{comment}', [App\Http\Controllers\TaskController::class, 'deleteComment'])->name('tasks.comments.destroy');
     
     // Risks
     Route::resource('risks', App\Http\Controllers\RiskController::class);
@@ -69,4 +80,8 @@ Route::middleware(['auth'])->group(function () {
     // Milestones (nested under plans)
     Route::resource('plans.milestones', App\Http\Controllers\MilestoneController::class)->except(['index']);
     Route::get('plans/{plan}/milestones', [App\Http\Controllers\MilestoneController::class, 'index'])->name('plans.milestones.index');
+    
+    // Presentations
+    Route::get('plans/{plan}/presentation', [App\Http\Controllers\PresentationController::class, 'show'])->name('plans.presentation');
+    Route::get('plans/{plan}/presentation/pdf', [App\Http\Controllers\PresentationController::class, 'exportPdf'])->name('plans.presentation.pdf');
 });

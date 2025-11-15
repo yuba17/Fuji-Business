@@ -19,13 +19,13 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
-<body class="font-sans antialiased bg-gray-50" x-data="{ sidebarOpen: window.innerWidth >= 1024 }">
+<body class="font-sans antialiased bg-gray-50" x-data="{ sidebarOpen: window.innerWidth >= 1024, sidebarCollapsed: false }" x-init="if (localStorage.getItem('sidebarCollapsed') === 'true') { sidebarCollapsed = true; }">
     <div class="min-h-screen flex">
         <!-- Sidebar Component -->
-        <x-layout.sidebar />
+        <x-layout.sidebar :collapsed="false" />
 
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col overflow-hidden lg:ml-0">
+        <div class="flex-1 flex flex-col overflow-hidden transition-all duration-300" :class="sidebarCollapsed && window.innerWidth >= 1024 ? 'lg:ml-20' : 'lg:ml-0'">
             <!-- Header Component -->
             <x-layout.header />
 

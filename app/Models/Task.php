@@ -121,6 +121,30 @@ class Task extends Model
     }
 
     /**
+     * Adjuntos de la tarea
+     */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(TaskAttachment::class);
+    }
+
+    /**
+     * Comentarios de la tarea
+     */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(TaskComment::class)->whereNull('parent_comment_id')->latest();
+    }
+
+    /**
+     * Todos los comentarios (incluyendo respuestas)
+     */
+    public function allComments(): HasMany
+    {
+        return $this->hasMany(TaskComment::class)->latest();
+    }
+
+    /**
      * Verificar si la tarea está vencida
      */
     public function isOverdue(): bool

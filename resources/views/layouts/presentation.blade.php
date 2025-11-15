@@ -36,10 +36,8 @@
         </header>
 
         <!-- Presentation Content -->
-        <main class="flex-1 overflow-y-auto">
-            <div class="container mx-auto px-8 py-12">
-                @yield('content')
-            </div>
+        <main class="flex-1 overflow-hidden">
+            @yield('content')
         </main>
 
         <!-- Navigation Controls -->
@@ -71,9 +69,11 @@
                 init() {
                     // Navegación por teclado
                     window.addEventListener('keydown', (e) => {
-                        if (e.key === 'ArrowRight' || e.key === ' ') {
+                        if (e.key === 'ArrowRight' || (e.key === ' ' && !e.shiftKey)) {
+                            e.preventDefault();
                             this.nextSlide();
-                        } else if (e.key === 'ArrowLeft') {
+                        } else if (e.key === 'ArrowLeft' || (e.key === ' ' && e.shiftKey)) {
+                            e.preventDefault();
                             this.previousSlide();
                         } else if (e.key === 'Escape') {
                             this.exitPresentation();
@@ -94,12 +94,19 @@
                 },
                 
                 exitPresentation() {
-                    window.location.href = '{{ route('dashboard') }}';
+                    if (window.presentationReturnUrl) {
+                        window.location.href = window.presentationReturnUrl;
+                    } else if (window.opener) {
+                        window.close();
+                    } else {
+                        window.history.back();
+                    }
                 }
             }
         }
     </script>
 
+    @stack('scripts')
     @livewireScripts
 </body>
 </html>

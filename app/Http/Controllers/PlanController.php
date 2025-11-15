@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Plan;
 use App\Models\PlanType;
 use App\Models\Area;
+use App\Services\PlanTemplateService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -56,6 +57,13 @@ class PlanController extends Controller
         $validated['is_current_version'] = true;
 
         $plan = Plan::create($validated);
+
+        // Crear secciones desde el template del tipo de plan
+        $planType = PlanType::find($validated['plan_type_id']);
+        if ($planType) {
+            $templateService = new PlanTemplateService();
+            $templateService->createSectionsFromTemplate($plan, $planType);
+        }
 
         return redirect()->route('plans.show', $plan)
             ->with('success', 'Plan creado correctamente');

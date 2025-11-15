@@ -1,4 +1,4 @@
-<header class="bg-white border-b border-gray-200 sticky top-0 z-40">
+<header class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
     <div class="flex items-center justify-between h-16 px-4">
         <!-- Mobile Menu Button -->
         <button @click="sidebarOpen = !sidebarOpen" 

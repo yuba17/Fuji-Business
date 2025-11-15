@@ -6,9 +6,13 @@ use App\Models\Task;
 use App\Models\Plan;
 use App\Models\Area;
 use App\Models\User;
+use App\Models\TaskAttachment;
+use App\Models\TaskComment;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class TaskController extends Controller
 {
@@ -115,9 +119,22 @@ class TaskController extends Controller
     {
         $this->authorize('view', $task);
         
-        $task->load(['plan', 'area', 'assignedUser', 'creator', 'milestone', 'parentTask', 'subtasks']);
+        $task->load([
+            'plan', 
+            'area', 
+            'assignedUser', 
+            'creator', 
+            'milestone', 
+            'parentTask', 
+            'subtasks', 
+            'attachments.uploader',
+            'comments.user',
+            'comments.replies.user'
+        ]);
         
-        return view('tasks.show', compact('task'));
+        $users = User::all(); // Para el autocompletado de menciones
+        
+        return view('tasks.show', compact('task', 'users'));
     }
 
     /**
@@ -186,5 +203,142 @@ class TaskController extends Controller
         return view('tasks.kanban', [
             'planId' => $planId,
         ]);
+    }
+
+    /**
+     * Subir adjunto a una tarea
+     */
+    public function uploadAttachment(Request $request, Task $task): RedirectResponse
+    {
+        $this->authorize('update', $task);
+        
+        $validated = $request->validate([
+            'file' => 'required|file|max:10240', // Máximo 10MB
+            'description' => 'nullable|string|max:500',
+        ]);
+
+        $file = $request->file('file');
+        $originalName = $file->getClientOriginalName();
+        $fileName = Str::uuid() . '.' . $file->getClientOriginalExtension();
+        $filePath = $file->storeAs('task-attachments', $fileName, 'public');
+
+        TaskAttachment::create([
+            'task_id' => $task->id,
+            'file_name' => $fileName,
+            'file_path' => $filePath,
+            'original_name' => $originalName,
+            'mime_type' => $file->getMimeType(),
+            'file_size' => $file->getSize(),
+            'uploaded_by' => auth()->id(),
+            'description' => $validated['description'] ?? null,
+        ]);
+
+        return redirect()->route('tasks.show', $task)
+            ->with('success', 'Archivo subido correctamente');
+    }
+
+    /**
+     * Eliminar adjunto de una tarea
+     */
+    public function deleteAttachment(Task $task, TaskAttachment $attachment): RedirectResponse
+    {
+        $this->authorize('update', $task);
+        
+        // Verificar que el adjunto pertenece a la tarea
+        if ($attachment->task_id !== $task->id) {
+            abort(403);
+        }
+
+        // Eliminar archivo del storage
+        if (Storage::disk('public')->exists($attachment->file_path)) {
+            Storage::disk('public')->delete($attachment->file_path);
+        }
+
+        $attachment->delete();
+
+        return redirect()->route('tasks.show', $task)
+            ->with('success', 'Archivo eliminado correctamente');
+    }
+
+    /**
+     * Descargar adjunto
+     */
+    public function downloadAttachment(Task $task, TaskAttachment $attachment)
+    {
+        $this->authorize('view', $task);
+        
+        // Verificar que el adjunto pertenece a la tarea
+        if ($attachment->task_id !== $task->id) {
+            abort(403);
+        }
+
+        if (!Storage::disk('public')->exists($attachment->file_path)) {
+            abort(404, 'Archivo no encontrado');
+        }
+
+        return Storage::disk('public')->download($attachment->file_path, $attachment->original_name);
+    }
+
+    /**
+     * Agregar comentario a una tarea
+     */
+    public function addComment(Request $request, Task $task): RedirectResponse
+    {
+        $this->authorize('view', $task);
+        
+        $validated = $request->validate([
+            'comment' => 'required|string|max:5000',
+            'parent_comment_id' => 'nullable|exists:task_comments,id',
+        ]);
+
+        // Extraer menciones del comentario
+        $mentions = TaskComment::extractMentions($validated['comment']);
+        $mentionedUserIds = [];
+        
+        foreach ($mentions as $mention) {
+            // Buscar usuario por nombre exacto o similar
+            $user = User::where('name', $mention)
+                ->orWhere('name', 'LIKE', "{$mention} %")
+                ->orWhere('name', 'LIKE', "% {$mention}")
+                ->orWhere('name', 'LIKE', "% {$mention} %")
+                ->first();
+            if ($user && !in_array($user->id, $mentionedUserIds)) {
+                $mentionedUserIds[] = $user->id;
+            }
+        }
+
+        TaskComment::create([
+            'task_id' => $task->id,
+            'user_id' => auth()->id(),
+            'comment' => $validated['comment'],
+            'mentioned_user_ids' => !empty($mentionedUserIds) ? $mentionedUserIds : null,
+            'parent_comment_id' => $validated['parent_comment_id'] ?? null,
+        ]);
+
+        return redirect()->route('tasks.show', $task)
+            ->with('success', 'Comentario agregado correctamente');
+    }
+
+    /**
+     * Eliminar comentario
+     */
+    public function deleteComment(Task $task, TaskComment $comment): RedirectResponse
+    {
+        $this->authorize('view', $task);
+        
+        // Verificar que el comentario pertenece a la tarea
+        if ($comment->task_id !== $task->id) {
+            abort(403);
+        }
+
+        // Solo el autor o un admin puede eliminar
+        if ($comment->user_id !== auth()->id() && !auth()->user()->isDirector()) {
+            abort(403);
+        }
+
+        $comment->delete();
+
+        return redirect()->route('tasks.show', $task)
+            ->with('success', 'Comentario eliminado correctamente');
     }
 }

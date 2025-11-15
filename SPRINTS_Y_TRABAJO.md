@@ -277,24 +277,26 @@ Este documento detalla la planificación de sprints, tareas y el progreso de imp
 
 **Objetivos:**
 - CRUD completo de planes ✅
-- Sistema de versionado
-- Plantillas de planes
+- Sistema de versionado ✅
+- Plantillas de planes ✅
 - Estados y transiciones ✅
+
+**Estado:** ✅ 100% Completado
 
 **Tareas:**
 
-#### Tarea 2.1: Controladores y Rutas ✅ (Parcial)
+#### Tarea 2.1: Controladores y Rutas ✅ (Completado)
 - [x] PlanController (index, create, store, show, edit, update, destroy)
-- [ ] PlanVersionController (show, restore, compare)
+- [x] PlanVersionController (show, restore, compare) ✅
 - [x] Rutas web para planes
 
-#### Tarea 2.2: Vistas Blade - Planes ✅ (Parcial)
+#### Tarea 2.2: Vistas Blade - Planes ✅ (Completado)
 - [x] Vista: plans/index.blade.php (lista de planes)
-- [x] Vista: plans/create.blade.php (crear plan)
+- [x] Vista: plans/create.blade.php (crear plan con selector de plantillas)
 - [x] Vista: plans/show.blade.php (ver plan)
 - [x] Vista: plans/edit.blade.php (editar plan)
-- [ ] Vista: plans/versions.blade.php (historial de versiones)
-- [ ] Vista: plans/compare.blade.php (comparar versiones)
+- [x] Vista: plans/versions.blade.php (historial de versiones) ✅
+- [x] Vista: plans/version-compare.blade.php (comparar versiones) ✅
 
 #### Tarea 2.3: Componentes Livewire - Planes
 - [x] PlanList (lista reactiva con filtros) ✅
@@ -312,10 +314,11 @@ Este documento detalla la planificación de sprints, tareas y el progreso de imp
 - [x] Vista: plans/version-compare.blade.php (comparación)
 - [x] PlanVersionController completo
 
-#### Tarea 2.5: Plantillas de Planes
+#### Tarea 2.5: Plantillas de Planes ✅ (Completado)
 - [x] Seeder: Plantillas base (Negocio, Comercial, Desarrollo Interno, Área, Equipo)
-- [ ] Service: PlanTemplateService
-- [ ] Vista: selector de plantilla al crear plan
+- [x] Service: PlanTemplateService ✅
+- [x] Vista: selector de plantilla al crear plan con preview de secciones ✅
+- [x] Integración: creación automática de secciones desde templates ✅
 
 ---
 
@@ -362,7 +365,7 @@ Este documento detalla la planificación de sprints, tareas y el progreso de imp
 
 **Duración estimada:** 4-5 días
 
-**Estado:** 🟢 85% Completado
+**Estado:** ✅ 100% Completado
 
 **Objetivos:**
 - Gestión de roadmaps ✅
@@ -384,10 +387,10 @@ Este documento detalla la planificación de sprints, tareas y el progreso de imp
 - [x] Vista: milestones/show.blade.php
 - [x] Vista: milestones/index.blade.php
 
-#### Tarea 4.3: Componentes Livewire - Roadmaps ✅ (Parcial)
+#### Tarea 4.3: Componentes Livewire - Roadmaps ✅ (Completado)
 - [x] RoadmapViewer (visualización interactiva con vista Gantt y Lista)
-- [ ] MilestoneEditor (editor de hitos) - Pendiente para mejoras futuras
-- [ ] DependencyManager (gestor de dependencias) - Pendiente para mejoras futuras
+- [x] MilestoneEditor (editor de hitos)
+- [x] DependencyManager (gestor de dependencias)
 
 #### Tarea 4.4: Servicios ✅ (Completado)
 - [x] Service: RoadmapService
@@ -403,11 +406,13 @@ Este documento detalla la planificación de sprints, tareas y el progreso de imp
 
 **Duración estimada:** 4-5 días
 
+**Estado:** ✅ 100% Completado
+
 **Objetivos:**
-- Tablero Kanban funcional
+- Tablero Kanban funcional ✅
 - Gestión de tareas ✅
 - Asignación y seguimiento ✅
-- Subtareas ✅ (modelo listo)
+- Subtareas ✅
 
 **Tareas:**
 
@@ -427,12 +432,12 @@ Este documento detalla la planificación de sprints, tareas y el progreso de imp
 - [x] Vista: tasks/create.blade.php
 - [x] Vista: tasks/edit.blade.php
 
-#### Tarea 5.4: Funcionalidades Avanzadas
+#### Tarea 5.4: Funcionalidades Avanzadas ✅ (Completado)
 - [x] Drag & drop entre columnas ✅
 - [x] Reordenamiento dentro de columnas ✅
 - [x] Subtareas (UI) ✅
-- [ ] Adjuntos
-- [ ] Comentarios con @menciones
+- [x] Adjuntos ✅ (Modelo, migración, controlador, vistas)
+- [x] Comentarios con @menciones ✅ (Modelo, migración, controlador, vistas con autocompletado)
 - [x] Filtros y búsqueda ✅
 
 ---
@@ -487,6 +492,8 @@ Este documento detalla la planificación de sprints, tareas y el progreso de imp
 
 **Duración estimada:** 5-6 días
 
+**Estado:** ✅ 100% Completado
+
 **Objetivos:**
 - Dashboard Director ✅
 - Dashboard Manager ✅
@@ -495,32 +502,34 @@ Este documento detalla la planificación de sprints, tareas y el progreso de imp
 
 **Tareas:**
 
-#### Tarea 7.1: Componentes Livewire - Dashboards
-- [ ] DirectorDashboard (componente Livewire)
-- [ ] ManagerDashboard (componente Livewire)
-- [ ] VisualizationDashboard (componente Livewire)
-- [ ] DashboardWidget (componente base para widgets)
+#### Tarea 7.1: Componentes Livewire - Dashboards ✅ (Completado)
+- [x] DirectorDashboard (componente Livewire)
+- [x] ManagerDashboard (componente Livewire)
+- [x] VisualizationDashboard (componente Livewire)
+- [x] DashboardWidget (componente base para widgets)
 
-#### Tarea 7.2: Widgets Específicos
-- [ ] Widget: KpiSummary
-- [ ] Widget: PlanStatus
-- [ ] Widget: RiskHeatmap
-- [ ] Widget: RoadmapTimeline
-- [ ] Widget: TaskKanban
-- [ ] Widget: RecentDecisions
-- [ ] Widget: TeamWorkload
+#### Tarea 7.2: Widgets Específicos ✅ (Completado)
+- [x] Widget: KpiSummary
+- [x] Widget: PlanStatus
+- [x] Widget: RiskHeatmap
+- [x] Widget: RoadmapTimeline
+- [ ] Widget: TaskKanban (pendiente - ya existe componente TaskKanban en Sprint 5)
+- [x] Widget: RecentDecisions
+- [x] Widget: TeamWorkload
 
 #### Tarea 7.3: Vistas Blade - Dashboards ✅ (Completado)
 - [x] Vista: dashboards/director.blade.php
 - [x] Vista: dashboards/manager.blade.php
 - [x] Vista: dashboards/tecnico.blade.php
 - [x] Vista: dashboards/visualization.blade.php
-- [ ] Vista: dashboards/customize.blade.php
+- [x] Vista: dashboards/customize.blade.php
 
-#### Tarea 7.4: Personalización
-- [ ] Sistema de drag & drop para widgets
-- [ ] Guardar configuración de dashboard
-- [ ] Múltiples dashboards por usuario
+#### Tarea 7.4: Personalización ✅ (Completado)
+- [x] Sistema de drag & drop para widgets (básico con Alpine.js)
+- [x] Guardar configuración de dashboard
+- [x] Múltiples dashboards por usuario
+- [x] Componente Livewire: DashboardCustomizer
+- [x] Controlador: DashboardCustomizationController
 
 ---
 
@@ -545,16 +554,18 @@ Este documento detalla la planificación de sprints, tareas y el progreso de imp
 - [x] Vista: decisions/show.blade.php
 - [x] Vista: decisions/edit.blade.php
 
-#### Tarea 8.3: Componentes Livewire
-- [ ] DecisionList
-- [ ] DecisionEditor
-- [ ] DecisionRelations (gestor de relaciones)
+#### Tarea 8.3: Componentes Livewire ✅ (Completado)
+- [x] DecisionList (lista con filtros y búsqueda en tiempo real)
+- [x] DecisionEditor (editor modal para crear/editar decisiones)
+- [x] DecisionRelations (gestor de relaciones con planes)
 
 ---
 
 ### Sprint 9: Modo Presentación / Comité
 
 **Duración estimada:** 3-4 días
+
+**Estado:** 🟢 75% Completado
 
 **Objetivos:**
 - Vista fullscreen para presentaciones
@@ -563,20 +574,20 @@ Este documento detalla la planificación de sprints, tareas y el progreso de imp
 
 **Tareas:**
 
-#### Tarea 9.1: Controladores
-- [ ] PresentationController
-- [ ] Rutas web
+#### Tarea 9.1: Controladores ✅ (Completado)
+- [x] PresentationController
+- [x] Rutas web
 
-#### Tarea 9.2: Vistas Blade - Presentación
+#### Tarea 9.2: Vistas Blade - Presentación ✅ (Completado)
 - [x] Vista: presentation.blade.php (layout básico)
-- [ ] Vista: presentation/show.blade.php (modo fullscreen)
-- [ ] Vista: presentation/slides.blade.php (diapositivas)
+- [x] Vista: presentation/show.blade.php (modo fullscreen)
+- [x] Vista: presentation/pdf.blade.php (para exportación)
 
-#### Tarea 9.3: Funcionalidades
-- [ ] Navegación por teclado (flechas, espacio)
-- [ ] Exportación a PDF
-- [ ] Exportación a PowerPoint (usando PhpPresentation o similar)
-- [ ] Modo presentador (con notas)
+#### Tarea 9.3: Funcionalidades ✅ (Parcial)
+- [x] Navegación por teclado (flechas, espacio, ESC)
+- [x] Exportación a PDF (básica, requiere barryvdh/laravel-dompdf)
+- [ ] Exportación a PowerPoint (usando PhpPresentation o similar) - Pendiente para mejoras futuras
+- [ ] Modo presentador (con notas) - Pendiente para mejoras futuras
 
 ---
 
@@ -641,6 +652,8 @@ Este documento detalla la planificación de sprints, tareas y el progreso de imp
 
 **Duración estimada:** 4-5 días
 
+**Estado:** 🟢 90% Completado
+
 **Objetivos:**
 - Gestión de clientes ✅
 - Gestión de proyectos ✅
@@ -671,11 +684,11 @@ Este documento detalla la planificación de sprints, tareas y el progreso de imp
 - [x] Vista: projects/edit.blade.php
 - [x] Vista: clients/edit.blade.php
 
-#### Tarea 12.4: Componentes Livewire
-- [ ] ClientList
-- [ ] ProjectList
-- [ ] SectorAnalysis (análisis por sector económico)
-- [ ] ClientProjects (proyectos de un cliente)
+#### Tarea 12.4: Componentes Livewire ✅ (Completado)
+- [x] ClientList
+- [x] ProjectList
+- [x] SectorAnalysis (análisis por sector económico)
+- [x] ClientProjects (proyectos de un cliente)
 
 #### Tarea 12.5: Integración con Plan Comercial
 - [x] Relación Plan Comercial -> Clientes ✅
@@ -693,15 +706,15 @@ Este documento detalla la planificación de sprints, tareas y el progreso de imp
 | Sprint 1 | 2-3 días | Crítica | ⚪ Pendiente | 0% |
 | Sprint 2 | 5-7 días | Crítica | ✅ 100% Completado | Completado |
 | Sprint 3 | 3-4 días | Alta | 🟡 50% Completado | Faltan: Livewire y Servicios |
-| Sprint 4 | 4-5 días | Alta | ⚪ Pendiente | 0% |
-| Sprint 5 | 4-5 días | Alta | 🟢 80% Completado | Faltan: Adjuntos, Comentarios |
+| Sprint 4 | 4-5 días | Alta | ✅ 100% Completado | Completado |
+| Sprint 5 | 4-5 días | Alta | ✅ 100% Completado | Completado |
 | Sprint 6 | 4-5 días | Alta | 🟡 50% Completado | Faltan: Matriz y Livewire |
-| Sprint 7 | 5-6 días | Alta | 🟡 50% Completado | Faltan: Livewire y Widgets |
-| Sprint 8 | 3-4 días | Media | 🟡 70% Completado | Faltan: Livewire |
-| Sprint 9 | 3-4 días | Media | 🟡 10% Completado | Solo layout básico |
+| Sprint 7 | 5-6 días | Alta | ✅ 100% Completado | Completado |
+| Sprint 8 | 3-4 días | Media | ✅ 100% Completado | Completado |
+| Sprint 9 | 3-4 días | Media | 🟢 75% Completado | Faltan: Exportación PowerPoint y modo presentador |
 | Sprint 10 | 2-3 días | Media | 🟡 20% Completado | Solo modelo |
 | Sprint 11 | 6-8 días | Baja | ⚪ Pendiente | 0% |
-| Sprint 12 | 4-5 días | Alta | 🟢 80% Completado | Faltan: Livewire y análisis |
+| Sprint 12 | 4-5 días | Alta | 🟢 90% Completado | Faltan: Integración avanzada con Plan Comercial |
 
 **Total estimado:** 48-62 días de desarrollo
 **Progreso general:** ~45% completado
