@@ -59,6 +59,6 @@ class Client extends Model
      */
     public function plans(): BelongsToMany
     {
-        return $this->belongsToMany(Plan::class);
+        return $this->belongsToMany(Plan::class, 'plan_client');
     }
 }

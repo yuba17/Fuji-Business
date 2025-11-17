@@ -101,4 +101,20 @@ class Area extends Model
     {
         return $this->hasMany(Task::class);
     }
+
+    /**
+     * Usuarios asignados a esta área como área principal
+     */
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class);
+    }
+
+    /**
+     * Líneas de servicio del área
+     */
+    public function serviceLines(): HasMany
+    {
+        return $this->hasMany(ServiceLine::class);
+    }
 }

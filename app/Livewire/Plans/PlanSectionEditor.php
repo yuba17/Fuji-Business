@@ -63,6 +63,13 @@ class PlanSectionEditor extends Component
 
         if ($this->sectionId) {
             $section = PlanSection::findOrFail($this->sectionId);
+            
+            // Verificar que la sección pertenece al plan
+            if ($section->plan_id !== $this->plan->id) {
+                session()->flash('error', 'La sección no pertenece a este plan.');
+                return;
+            }
+            
             $section->update([
                 'title' => $this->title,
                 'content' => $this->content,
@@ -83,26 +90,54 @@ class PlanSectionEditor extends Component
             session()->flash('success', 'Sección creada correctamente.');
         }
 
+        // Recargar el plan para actualizar las relaciones
+        $this->plan->refresh();
         $this->closeModal();
         $this->dispatch('sectionUpdated');
+        
+        // Redirigir para recargar la página y actualizar las pestañas
+        return redirect()->route('plans.show', $this->plan)
+            ->with('success', $this->sectionId ? 'Sección actualizada correctamente.' : 'Sección creada correctamente.');
     }
 
     public function delete($sectionId)
     {
         $section = PlanSection::findOrFail($sectionId);
         
+        // Verificar que la sección pertenece al plan
+        if ($section->plan_id !== $this->plan->id) {
+            session()->flash('error', 'La sección no pertenece a este plan.');
+            return;
+        }
+        
         if (!Auth::user()->can('update', $this->plan)) {
             session()->flash('error', 'No tienes permisos para eliminar secciones.');
             return;
         }
 
+        // No permitir eliminar secciones requeridas
+        if ($section->is_required) {
+            session()->flash('error', 'No se puede eliminar una sección requerida.');
+            return;
+        }
+
         $section->delete();
-        session()->flash('success', 'Sección eliminada correctamente.');
+        
+        // Recargar el plan para actualizar las relaciones
+        $this->plan->refresh();
         $this->dispatch('sectionUpdated');
+        
+        // Redirigir para recargar la página y actualizar las pestañas
+        return redirect()->route('plans.show', $this->plan)
+            ->with('success', 'Sección eliminada correctamente.');
     }
+
+    protected $listeners = ['sectionUpdated' => '$refresh'];
 
     public function render()
     {
+        // Recargar el plan para obtener las secciones actualizadas
+        $this->plan->refresh();
         $sections = $this->plan->sections()->orderBy('order')->get();
         
         return view('livewire.plans.plan-section-editor', [

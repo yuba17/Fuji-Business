@@ -184,4 +184,12 @@ class Task extends Model
             default => $this->priority,
         };
     }
+
+    /**
+     * Tags de la tarea
+     */
+    public function tags()
+    {
+        return $this->morphToMany(Tag::class, 'taggable');
+    }
 }

@@ -9,7 +9,7 @@
         Actualizar Valor
     </button>
     
-    <x-ui.modal wire:model="showModal" title="Actualizar KPI: {{ $kpi->name }}">
+    <x-ui.modal name="showModal" title="Actualizar KPI: {{ $kpi->name }}">
         <form wire:submit.prevent="updateValue" class="space-y-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">

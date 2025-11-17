@@ -76,9 +76,118 @@ class PlanController extends Controller
     {
         $this->authorize('view', $plan);
         
-        $plan->load(['planType', 'area', 'manager', 'director', 'sections', 'kpis', 'milestones', 'tasks', 'risks']);
+        $plan->load([
+            'planType',
+            'area',
+            'manager',
+            'director',
+            'sections' => function($q) {
+                $q->orderBy('order');
+            },
+            'kpis',
+            'milestones',
+            'tasks',
+            'risks',
+        ]);
+
+        $teamUsers = null;
+        $groupedByInternalRole = null;
+        $serviceLines = null;
+        $capacityHeatmap = null;
+        $talentPyramid = null;
+        $organizationStats = null;
+
+        if ($plan->planType && str_contains(strtolower($plan->planType->name), 'desarrollo interno') && $plan->area) {
+            $teamUsers = $plan->area->users()
+                ->with(['internalRole', 'area', 'roles', 'serviceLines', 'manager'])
+                ->orderBy('name')
+                ->get();
+
+            $groupedByInternalRole = $teamUsers
+                ->groupBy(fn ($user) => optional($user->internalRole)->name ?? 'Sin rol interno');
+
+            $serviceLines = $plan->area->serviceLines()
+                ->with(['manager', 'users' => function($q) {
+                    $q->with('internalRole');
+                }])
+                ->orderBy('order')
+                ->get();
+
+            // Calcular heatmap de capacidad (líneas × niveles)
+            $capacityHeatmap = [];
+            $levels = ['director', 'manager', 'lead', 'senior', 'mid', 'junior'];
+            
+            foreach ($serviceLines as $line) {
+                $lineData = [
+                    'line' => $line,
+                    'levels' => []
+                ];
+                
+                foreach ($levels as $level) {
+                    $count = $line->users->filter(function($user) use ($level) {
+                        $userLevel = strtolower(optional($user->internalRole)->level ?? '');
+                        $roleType = strtolower(optional($user->internalRole)->role_type ?? '');
+                        // Director: nivel director o role_type director
+                        if ($level === 'director') {
+                            return $userLevel === 'director' || $roleType === 'director' || $user->hasRole('director');
+                        }
+                        // Manager: nivel manager o role_type manager (pero no director)
+                        if ($level === 'manager') {
+                            return ($userLevel === 'manager' || $roleType === 'manager' || $user->hasRole('manager')) 
+                                   && !$user->hasRole('director') && $roleType !== 'director';
+                        }
+                        // Otros niveles: coincidencia exacta
+                        return $userLevel === $level;
+                    })->count();
+                    
+                    $lineData['levels'][$level] = $count;
+                }
+                
+                // Calcular ratio manager:IC para alertas
+                $managers = $lineData['levels']['manager'] + $lineData['levels']['director'];
+                $ics = $lineData['levels']['senior'] + $lineData['levels']['mid'] + $lineData['levels']['junior'];
+                $lineData['ratio'] = $ics > 0 && $managers > 0 ? round($ics / $managers, 1) : 0;
+                $lineData['health'] = $lineData['ratio'] > 12 ? 'warning' : ($lineData['ratio'] > 8 ? 'caution' : 'good');
+                
+                $capacityHeatmap[] = $lineData;
+            }
+
+            // Calcular pirámide de talento (agrupación por nivel)
+            $talentPyramid = [
+                'director' => $teamUsers->filter(function($u) {
+                    $level = strtolower(optional($u->internalRole)->level ?? '');
+                    $roleType = strtolower(optional($u->internalRole)->role_type ?? '');
+                    return $level === 'director' || $roleType === 'director' || $u->hasRole('director');
+                })->count(),
+                'manager' => $teamUsers->filter(function($u) {
+                    $level = strtolower(optional($u->internalRole)->level ?? '');
+                    $roleType = strtolower(optional($u->internalRole)->role_type ?? '');
+                    return ($level === 'manager' || $roleType === 'manager' || $u->hasRole('manager'))
+                           && !$u->hasRole('director') && $roleType !== 'director';
+                })->count(),
+                'lead' => $teamUsers->filter(fn($u) => strtolower(optional($u->internalRole)->level ?? '') === 'lead')->count(),
+                'senior' => $teamUsers->filter(fn($u) => strtolower(optional($u->internalRole)->level ?? '') === 'senior')->count(),
+                'mid' => $teamUsers->filter(fn($u) => strtolower(optional($u->internalRole)->level ?? '') === 'mid')->count(),
+                'junior' => $teamUsers->filter(fn($u) => strtolower(optional($u->internalRole)->level ?? '') === 'junior')->count(),
+            ];
+            
+            $total = array_sum($talentPyramid);
+            foreach ($talentPyramid as $level => $count) {
+                $talentPyramid[$level . '_pct'] = $total > 0 ? round(($count / $total) * 100, 1) : 0;
+            }
+
+            // Stats de organización
+            $managers = $talentPyramid['director'] + $talentPyramid['manager'];
+            $ics = $talentPyramid['senior'] + $talentPyramid['mid'] + $talentPyramid['junior'];
+            $organizationStats = [
+                'total_people' => $teamUsers->count(),
+                'total_roles' => $groupedByInternalRole->keys()->count(),
+                'total_service_lines' => $serviceLines->count(),
+                'manager_ic_ratio' => $ics > 0 && $managers > 0 ? round($ics / $managers, 1) : 0,
+            ];
+        }
         
-        return view('plans.show', compact('plan'));
+        return view('plans.show', compact('plan', 'teamUsers', 'groupedByInternalRole', 'serviceLines', 'capacityHeatmap', 'talentPyramid', 'organizationStats'));
     }
 
     /**

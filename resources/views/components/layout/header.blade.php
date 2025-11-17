@@ -9,7 +9,7 @@
         </button>
 
         <!-- Breadcrumbs -->
-        <div class="flex-1 ml-4 lg:ml-0 min-w-0">
+        <div class="flex-1 min-w-0">
             @hasSection('breadcrumbs')
                 <div class="overflow-x-auto">
                     @yield('breadcrumbs')
@@ -35,7 +35,6 @@
             @hasSection('header-actions')
                 @yield('header-actions')
             @endif
-            
             <x-layout.user-menu />
         </div>
     </div>

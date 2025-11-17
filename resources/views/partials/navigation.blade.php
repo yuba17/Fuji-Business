@@ -152,3 +152,39 @@
               class="whitespace-nowrap">Clientes</span>
     </a>
 @endif
+
+<a href="{{ route('search.index') }}" 
+   :class="sidebarCollapsed ? 'justify-center px-3' : 'px-4'"
+   class="group flex items-center gap-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 {{ request()->routeIs('search.*') ? 'bg-gradient-to-r from-teal-600 via-cyan-600 to-teal-600 text-white shadow-lg shadow-teal-500/30' : 'text-gray-700 hover:bg-gradient-to-r hover:from-teal-50 hover:via-cyan-50 hover:to-teal-50 hover:text-teal-600' }}"
+   :title="sidebarCollapsed ? 'Búsqueda' : ''">
+    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+    </svg>
+    <span x-show="!sidebarCollapsed" 
+          x-transition:enter="transition ease-out duration-200"
+          x-transition:enter-start="opacity-0"
+          x-transition:enter-end="opacity-100"
+          x-transition:leave="transition ease-in duration-150"
+          x-transition:leave-start="opacity-100"
+          x-transition:leave-end="opacity-0"
+          class="whitespace-nowrap">Búsqueda</span>
+</a>
+
+@if($isDirector || $isManager)
+    <a href="{{ route('tags.index') }}" 
+       :class="sidebarCollapsed ? 'justify-center px-3' : 'px-4'"
+       class="group flex items-center gap-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 {{ request()->routeIs('tags.*') ? 'bg-gradient-to-r from-pink-600 via-rose-600 to-pink-600 text-white shadow-lg shadow-pink-500/30' : 'text-gray-700 hover:bg-gradient-to-r hover:from-pink-50 hover:via-rose-50 hover:to-pink-50 hover:text-pink-600' }}"
+       :title="sidebarCollapsed ? 'Etiquetas' : ''">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+        </svg>
+        <span x-show="!sidebarCollapsed" 
+              x-transition:enter="transition ease-out duration-200"
+              x-transition:enter-start="opacity-0"
+              x-transition:enter-end="opacity-100"
+              x-transition:leave="transition ease-in duration-150"
+              x-transition:leave-start="opacity-100"
+              x-transition:leave-end="opacity-0"
+              class="whitespace-nowrap">Etiquetas</span>
+    </a>
+@endif

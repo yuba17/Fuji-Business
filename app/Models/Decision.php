@@ -64,4 +64,12 @@ class Decision extends Model
             default => $this->status,
         };
     }
+
+    /**
+     * Tags de la decisión
+     */
+    public function tags()
+    {
+        return $this->morphToMany(Tag::class, 'taggable');
+    }
 }

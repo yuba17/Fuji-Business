@@ -3,13 +3,18 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
@@ -23,6 +28,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'manager_id',
+        'internal_role_id',
+        'area_id',
     ];
 
     /**
@@ -79,6 +87,48 @@ class User extends Authenticatable
     }
 
     /**
+     * Rol interno actual del usuario
+     */
+    public function internalRole(): BelongsTo
+    {
+        return $this->belongsTo(InternalRole::class);
+    }
+
+    /**
+     * Área principal del usuario
+     */
+    public function area(): BelongsTo
+    {
+        return $this->belongsTo(Area::class);
+    }
+
+    /**
+     * Historial de roles internos del usuario
+     */
+    public function internalRoleHistory(): HasMany
+    {
+        return $this->hasMany(UserInternalRole::class);
+    }
+
+    /**
+     * Líneas de servicio a las que pertenece el usuario
+     */
+    public function serviceLines(): BelongsToMany
+    {
+        return $this->belongsToMany(ServiceLine::class);
+    }
+
+    /**
+     * Competencias del usuario (con niveles)
+     */
+    public function competencies(): BelongsToMany
+    {
+        return $this->belongsToMany(Competency::class, 'user_competencies')
+            ->withPivot('current_level', 'target_level', 'last_assessed_at', 'assessed_by', 'notes')
+            ->withTimestamps();
+    }
+
+    /**
      * Verificar si el usuario tiene un rol específico
      */
     public function hasRole(string $roleSlug): bool
@@ -129,7 +179,7 @@ class User extends Authenticatable
     /**
      * Planes donde el usuario es manager
      */
-    public function managedPlans()
+    public function managedPlans(): HasMany
     {
         return $this->hasMany(Plan::class, 'manager_id');
     }
@@ -137,7 +187,7 @@ class User extends Authenticatable
     /**
      * Planes donde el usuario es director
      */
-    public function directedPlans()
+    public function directedPlans(): HasMany
     {
         return $this->hasMany(Plan::class, 'director_id');
     }
@@ -145,7 +195,7 @@ class User extends Authenticatable
     /**
      * Tareas asignadas al usuario
      */
-    public function assignedTasks()
+    public function assignedTasks(): HasMany
     {
         return $this->hasMany(Task::class, 'assigned_to');
     }
@@ -153,7 +203,7 @@ class User extends Authenticatable
     /**
      * Tareas creadas por el usuario
      */
-    public function createdTasks()
+    public function createdTasks(): HasMany
     {
         return $this->hasMany(Task::class, 'created_by');
     }
@@ -195,5 +245,29 @@ class User extends Authenticatable
         return $query->whereHas('roles', function ($q) {
             $q->where('slug', 'tecnico');
         });
+    }
+
+    /**
+     * Manager directo de este usuario (jefe).
+     */
+    public function manager(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'manager_id');
+    }
+
+    /**
+     * Personas que reportan directamente a este usuario.
+     */
+    public function directReports(): HasMany
+    {
+        return $this->hasMany(User::class, 'manager_id');
+    }
+
+    /**
+     * Verificar si el usuario puede acceder al panel de Filament
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->hasAnyRole(['director', 'manager']);
     }
 }

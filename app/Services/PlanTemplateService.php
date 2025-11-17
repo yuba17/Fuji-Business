@@ -27,7 +27,7 @@ class PlanTemplateService
                 'content' => $sectionData['content'] ?? '',
                 'order' => $sectionData['order'] ?? 0,
                 'is_required' => $sectionData['is_required'] ?? false,
-                'is_completed' => false,
+                'type' => 'text',
             ]);
         }
     }

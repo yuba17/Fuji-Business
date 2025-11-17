@@ -164,7 +164,7 @@ class Plan extends Model
      */
     public function clients(): BelongsToMany
     {
-        return $this->belongsToMany(Client::class);
+        return $this->belongsToMany(Client::class, 'plan_client');
     }
 
     /**
@@ -181,6 +181,14 @@ class Plan extends Model
     public function tags()
     {
         return $this->morphToMany(Tag::class, 'taggable');
+    }
+
+    /**
+     * Escenarios del plan
+     */
+    public function scenarios(): HasMany
+    {
+        return $this->hasMany(Scenario::class);
     }
 
     /**

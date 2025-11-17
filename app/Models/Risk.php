@@ -143,4 +143,12 @@ class Risk extends Model
             default => $this->strategy ?? 'No definida',
         };
     }
+
+    /**
+     * Tags del riesgo
+     */
+    public function tags()
+    {
+        return $this->morphToMany(Tag::class, 'taggable');
+    }
 }

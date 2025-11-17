@@ -23,47 +23,8 @@ class TaskController extends Controller
     {
         $this->authorize('viewAny', Task::class);
         
-        $user = auth()->user();
-        
-        $query = Task::with(['plan', 'area', 'assignedUser', 'milestone']);
-        
-        // Filtrar según rol
-        if ($user->isManager()) {
-            $query->where(function($q) use ($user) {
-                $q->where('assigned_to', $user->id)
-                  ->orWhere('created_by', $user->id)
-                  ->orWhereIn('area_id', $user->areas->pluck('id'))
-                  ->orWhereHas('plan', function($planQ) use ($user) {
-                      $planQ->where('manager_id', $user->id)
-                            ->orWhere('director_id', $user->id);
-                  });
-            });
-        } elseif ($user->isTecnico()) {
-            $query->where(function($q) use ($user) {
-                $q->where('assigned_to', $user->id)
-                  ->orWhere('created_by', $user->id);
-            });
-        } elseif ($user->isVisualizacion()) {
-            // Visualización ve todas las tareas
-        }
-        
-        // Filtros
-        if ($request->filled('plan_id')) {
-            $query->where('plan_id', $request->plan_id);
-        }
-        
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-        
-        if ($request->filled('priority')) {
-            $query->where('priority', $request->priority);
-        }
-        
-        $tasks = $query->latest()->paginate(20);
-        $plans = Plan::where('status', '!=', 'archived')->get();
-        
-        return view('tasks.index', compact('tasks', 'plans'));
+        // El componente Livewire TaskList maneja toda la lógica de filtrado y listado
+        return view('tasks.index');
     }
 
     /**
