@@ -32,6 +32,10 @@ Route::middleware(['auth'])->group(function () {
     // Settings
     Route::redirect('settings', 'settings/profile');
     Route::get('settings/profile', Profile::class)->name('profile.edit');
+    
+    // Perfil Expandido
+    Route::get('profile', [App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
+    Route::get('profile/{user}', [App\Http\Controllers\ProfileController::class, 'showUser'])->name('profile.show.user');
     Route::get('settings/password', Password::class)->name('user-password.edit');
     Route::get('settings/appearance', Appearance::class)->name('appearance.edit');
     Route::get('settings/two-factor', TwoFactor::class)

@@ -7,6 +7,7 @@ use App\Models\PlanType;
 use App\Models\Area;
 use App\Services\PlanTemplateService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 
@@ -90,16 +91,45 @@ class PlanController extends Controller
             'risks',
         ]);
 
+        $isInternalPlan = $plan->planType
+            ? Str::contains(Str::lower($plan->planType->name ?? ''), 'desarrollo interno')
+            : false;
+        $isCommercialPlan = $plan->planType
+            ? Str::contains(Str::lower($plan->planType->name ?? ''), 'comercial')
+            : false;
+
+        $availableTabs = ['summary'];
+        if ($isInternalPlan) {
+            $availableTabs = array_merge($availableTabs, [
+                'organization',
+                'competencies',
+                'infrastructure',
+                'certifications',
+                'operational-roadmap',
+                'innovation-tooling',
+                'team-culture',
+            ]);
+        }
+        if ($isCommercialPlan) {
+            $availableTabs[] = 'sectorial';
+        }
+
+        $requestedTab = request()->query('tab');
+        $activeTab = in_array($requestedTab, $availableTabs, true)
+            ? $requestedTab
+            : ($availableTabs[0] ?? 'summary');
+
         $teamUsers = null;
         $groupedByInternalRole = null;
         $serviceLines = null;
         $capacityHeatmap = null;
         $talentPyramid = null;
-        $organizationStats = null;
+            $organizationStats = null;
+            $profileStats = null;
 
-        if ($plan->planType && str_contains(strtolower($plan->planType->name), 'desarrollo interno') && $plan->area) {
+        if ($isInternalPlan && $plan->area) {
             $teamUsers = $plan->area->users()
-                ->with(['internalRole', 'area', 'roles', 'serviceLines', 'manager'])
+                ->with(['internalRole', 'area', 'roles', 'serviceLines', 'manager', 'competencies', 'userCertifications'])
                 ->orderBy('name')
                 ->get();
 
@@ -179,15 +209,38 @@ class PlanController extends Controller
             // Stats de organización
             $managers = $talentPyramid['director'] + $talentPyramid['manager'];
             $ics = $talentPyramid['senior'] + $talentPyramid['mid'] + $talentPyramid['junior'];
-            $organizationStats = [
-                'total_people' => $teamUsers->count(),
-                'total_roles' => $groupedByInternalRole->keys()->count(),
-                'total_service_lines' => $serviceLines->count(),
-                'manager_ic_ratio' => $ics > 0 && $managers > 0 ? round($ics / $managers, 1) : 0,
-            ];
-        }
+                $organizationStats = [
+                    'total_people' => $teamUsers->count(),
+                    'total_roles' => $groupedByInternalRole->keys()->count(),
+                    'total_service_lines' => $serviceLines->count(),
+                    'manager_ic_ratio' => $ics > 0 && $managers > 0 ? round($ics / $managers, 1) : 0,
+                ];
+
+                // Estadísticas de perfiles
+                $profileStats = [
+                    'avg_completion' => round($teamUsers->avg('profile_completion_percent') ?? 0, 1),
+                    'complete_profiles' => $teamUsers->where('profile_completion_percent', '>=', 100)->count(),
+                    'incomplete_profiles' => $teamUsers->where('profile_completion_percent', '<', 100)->count(),
+                    'total_competencies' => $teamUsers->sum(fn($u) => $u->competencies->count()),
+                    'total_certifications' => $teamUsers->sum(fn($u) => $u->userCertifications->count()),
+                    'users_with_avatar' => $teamUsers->whereNotNull('avatar_url')->count(),
+                    'users_without_avatar' => $teamUsers->whereNull('avatar_url')->count(),
+                ];
+            }
         
-        return view('plans.show', compact('plan', 'teamUsers', 'groupedByInternalRole', 'serviceLines', 'capacityHeatmap', 'talentPyramid', 'organizationStats'));
+        return view('plans.show', compact(
+            'plan',
+            'teamUsers',
+            'groupedByInternalRole',
+            'serviceLines',
+            'capacityHeatmap',
+            'talentPyramid',
+            'organizationStats',
+            'profileStats',
+            'activeTab',
+            'isInternalPlan',
+            'isCommercialPlan'
+        ));
     }
 
     /**

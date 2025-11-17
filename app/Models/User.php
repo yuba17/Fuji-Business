@@ -31,6 +31,15 @@ class User extends Authenticatable implements FilamentUser
         'manager_id',
         'internal_role_id',
         'area_id',
+        'bio',
+        'avatar_url',
+        'phone',
+        'joined_at',
+        'last_evaluation_at',
+        'availability_percent',
+        'work_preferences',
+        'career_goals',
+        'profile_completion_percent',
     ];
 
     /**
@@ -55,6 +64,9 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'joined_at' => 'date',
+            'last_evaluation_at' => 'date',
+            'work_preferences' => 'array',
         ];
     }
 
@@ -126,6 +138,50 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsToMany(Competency::class, 'user_competencies')
             ->withPivot('current_level', 'target_level', 'last_assessed_at', 'assessed_by', 'notes')
             ->withTimestamps();
+    }
+
+    /**
+     * Certificaciones del usuario
+     */
+    public function userCertifications(): HasMany
+    {
+        return $this->hasMany(UserCertification::class);
+    }
+
+    /**
+     * Certificaciones del usuario (relación many-to-many)
+     */
+    public function certifications(): BelongsToMany
+    {
+        return $this->belongsToMany(Certification::class, 'user_certifications')
+            ->withPivot(['obtained_at', 'expires_at', 'certificate_number', 'status', 'planned_date', 'priority', 'notes'])
+            ->withTimestamps();
+    }
+
+    /**
+     * Badges de certificaciones del usuario
+     */
+    public function certificationBadges(): HasMany
+    {
+        return $this->hasMany(CertificationBadge::class);
+    }
+
+    /**
+     * Obtener el total de puntos de gamificación del usuario
+     */
+    public function getTotalCertificationPointsAttribute(): int
+    {
+        $badgePoints = $this->certificationBadges()->sum('points');
+        
+        $certificationPoints = $this->userCertifications()
+            ->where('status', 'active')
+            ->with('certification')
+            ->get()
+            ->sum(function($uc) {
+                return $uc->certification->points_reward ?? 0;
+            });
+        
+        return $badgePoints + $certificationPoints;
     }
 
     /**

@@ -140,115 +140,134 @@
     </div>
 </div>
 
+@php
+    $tabQueryParams = request()->except('tab', 'section');
+    $tabUrl = function (string $key) use ($plan, $tabQueryParams) {
+        return route('plans.show', array_merge(['plan' => $plan], $tabQueryParams, ['tab' => $key]));
+    };
+@endphp
+
 <!-- Tabs de Navegación (Resumen / Organización / Ejecución) -->
-<div class="mb-6" x-data="{ activeTab: 'summary' }">
+<div class="mb-6">
     <div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-2 border border-gray-200">
-        <nav class="flex flex-wrap gap-2">
-            <button @click="activeTab = 'summary'" 
-                    :class="activeTab === 'summary' ? 'bg-gradient-to-r from-red-600 to-orange-600 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'"
-                    class="whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ $tabUrl('summary') }}"
+               @class([
+                   'whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2',
+                   'bg-gradient-to-r from-red-600 to-orange-600 text-white shadow-lg' => $activeTab === 'summary',
+                   'bg-white text-gray-600 hover:bg-gray-50' => $activeTab !== 'summary',
+               ])>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
                 Resumen
-            </button>
-            @if($plan->planType && str_contains(strtolower($plan->planType->name), 'desarrollo interno'))
-            <button @click="activeTab = 'organization'" 
-                    :class="activeTab === 'organization' ? 'bg-gradient-to-r from-emerald-600 to-green-500 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'"
-                    class="whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M9 20H4v-2a3 3 0 015.356-1.857M12 11a4 4 0 110-8 4 4 0 010 8z" />
-                </svg>
-                Organización
-            </button>
-            <button @click="activeTab = 'competencies'" 
-                    :class="activeTab === 'competencies' ? 'bg-gradient-to-r from-purple-600 to-indigo-500 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'"
-                    class="whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                </svg>
-                Competencias
-            </button>
-            <button @click="activeTab = 'infrastructure'" 
-                    :class="activeTab === 'infrastructure' ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'"
-                    class="whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/>
-                </svg>
-                Infraestructura
-            </button>
-            <button @click="activeTab = 'processes'" 
-                    :class="activeTab === 'processes' ? 'bg-gradient-to-r from-orange-600 to-red-500 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'"
-                    class="whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                </svg>
-                Procesos
-            </button>
-            <button @click="activeTab = 'quality'" 
-                    :class="activeTab === 'quality' ? 'bg-gradient-to-r from-green-600 to-emerald-500 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'"
-                    class="whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                Calidad
-            </button>
-            <button @click="activeTab = 'training'" 
-                    :class="activeTab === 'training' ? 'bg-gradient-to-r from-yellow-600 to-orange-500 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'"
-                    class="whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                </svg>
-                Formación
-            </button>
-            <button @click="activeTab = 'rd'" 
-                    :class="activeTab === 'rd' ? 'bg-gradient-to-r from-indigo-600 to-purple-500 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'"
-                    class="whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
-                </svg>
-                I+D
-            </button>
-            <button @click="activeTab = 'opsec'" 
-                    :class="activeTab === 'opsec' ? 'bg-gradient-to-r from-red-600 to-pink-500 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'"
-                    class="whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                </svg>
-                OPSEC
-            </button>
-            <button @click="activeTab = 'operational-roadmap'" 
-                    :class="activeTab === 'operational-roadmap' ? 'bg-gradient-to-r from-teal-600 to-cyan-500 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'"
-                    class="whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                </svg>
-                Roadmap Operativo
-            </button>
+            </a>
+
+            @if($isInternalPlan)
+                <a href="{{ $tabUrl('organization') }}"
+                   @class([
+                       'whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2',
+                       'bg-gradient-to-r from-emerald-600 to-green-500 text-white shadow-lg' => $activeTab === 'organization',
+                       'bg-white text-gray-600 hover:bg-gray-50' => $activeTab !== 'organization',
+                   ])>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M9 20H4v-2a3 3 0 015.356-1.857M12 11a4 4 0 110-8 4 4 0 010 8z" />
+                    </svg>
+                    Organización
+                </a>
+
+                <a href="{{ $tabUrl('competencies') }}"
+                   @class([
+                       'whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2',
+                       'bg-gradient-to-r from-purple-600 to-indigo-500 text-white shadow-lg' => $activeTab === 'competencies',
+                       'bg-white text-gray-600 hover:bg-gray-50' => $activeTab !== 'competencies',
+                   ])>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                    Competencias
+                </a>
+
+                <a href="{{ $tabUrl('infrastructure') }}"
+                   @class([
+                       'whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2',
+                       'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg' => $activeTab === 'infrastructure',
+                       'bg-white text-gray-600 hover:bg-gray-50' => $activeTab !== 'infrastructure',
+                   ])>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/>
+                    </svg>
+                    Infraestructura
+                </a>
+
+                <a href="{{ $tabUrl('certifications') }}"
+                   @class([
+                       'whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2',
+                       'bg-gradient-to-r from-yellow-600 to-amber-500 text-white shadow-lg' => $activeTab === 'certifications',
+                       'bg-white text-gray-600 hover:bg-gray-50' => $activeTab !== 'certifications',
+                   ])>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                    </svg>
+                    Certificaciones
+                </a>
+
+                <a href="{{ $tabUrl('operational-roadmap') }}"
+                   @class([
+                       'whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2',
+                       'bg-gradient-to-r from-teal-600 to-cyan-500 text-white shadow-lg' => $activeTab === 'operational-roadmap',
+                       'bg-white text-gray-600 hover:bg-gray-50' => $activeTab !== 'operational-roadmap',
+                   ])>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    Roadmap
+                </a>
+
+                <a href="{{ $tabUrl('innovation-tooling') }}"
+                   @class([
+                       'whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2',
+                       'bg-gradient-to-r from-indigo-600 to-blue-500 text-white shadow-lg' => $activeTab === 'innovation-tooling',
+                       'bg-white text-gray-600 hover:bg-gray-50' => $activeTab !== 'innovation-tooling',
+                   ])>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3v8h8M21 3l-9 9-4-4-6 6"/>
+                    </svg>
+                    I+D & Tooling
+                </a>
+
+                <a href="{{ $tabUrl('team-culture') }}"
+                   @class([
+                       'whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2',
+                       'bg-gradient-to-r from-pink-600 to-purple-500 text-white shadow-lg' => $activeTab === 'team-culture',
+                       'bg-white text-gray-600 hover:bg-gray-50' => $activeTab !== 'team-culture',
+                   ])>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M9 20H4v-2a3 3 0 015.356-1.857M12 11a4 4 0 110-8 4 4 0 010 8z" />
+                    </svg>
+                    Cultura & Liderazgo
+                </a>
             @endif
-            <button @click="activeTab = 'execution'" 
-                    :class="activeTab === 'execution' ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'"
-                    class="whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                </svg>
-                Ejecución
-            </button>
-            @if($plan->planType && str_contains(strtolower($plan->planType->name), 'comercial'))
-            <button @click="activeTab = 'sectorial'" 
-                    :class="activeTab === 'sectorial' ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'"
-                    class="whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                </svg>
-                Análisis Sectorial
-            </button>
+
+            @if($isCommercialPlan)
+                <a href="{{ $tabUrl('sectorial') }}"
+                   @class([
+                       'whitespace-nowrap py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2',
+                       'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg' => $activeTab === 'sectorial',
+                       'bg-white text-gray-600 hover:bg-gray-50' => $activeTab !== 'sectorial',
+                   ])>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    Análisis Sectorial
+                </a>
             @endif
-        </nav>
+        </div>
     </div>
     
     <!-- Tab Content: Resumen -->
-    <div x-show="activeTab === 'summary'" class="mt-6">
+    @if($activeTab === 'summary')
+    <div class="mt-6">
         <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-red-500">
             <div class="flex items-center gap-3 mb-6">
                 <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
@@ -274,12 +293,145 @@
                     <dd class="text-base font-semibold text-gray-900">{{ $plan->director->name ?? 'No asignado' }}</dd>
                 </div>
             </dl>
+
+            @php
+                $kpisCount = $plan->kpis->count();
+                $kpisRecent = $plan->kpis->where('updated_at', '>=', now()->subDays(30))->count();
+                $milestonesCount = $plan->milestones->count();
+                $milestonesDelayed = $plan->milestones->filter(fn($m) => $m->isDelayed())->count();
+                $tasksCount = $plan->tasks->count();
+                $tasksOverdue = $plan->tasks->filter(fn($t) => $t->isOverdue())->count();
+                $risksCount = $plan->risks->count();
+                $risksOpen = $plan->risks->where('status', 'open')->count();
+            @endphp
+
+            <div class="mt-8">
+                <h3 class="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 text-white flex items-center justify-center text-xs font-bold">⚙️</span>
+                    Operaciones del plan
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-blue-100 hover:shadow-lg transition-all">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white flex items-center justify-center shadow-inner">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">KPIs</p>
+                                    <p class="text-2xl font-bold text-gray-900">{{ $kpisCount }}</p>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 text-[10px] font-bold rounded-full {{ $kpisRecent > 0 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500' }}">
+                                {{ $kpisRecent }} act. 30d
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-4">Indicadores clave del plan</p>
+                        <div class="flex items-center justify-between text-xs font-semibold">
+                            <a href="{{ route('kpis.index', ['plan_id' => $plan->id]) }}" class="text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                                Ver tablero
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </a>
+                            <a href="{{ route('kpis.create', ['plan_id' => $plan->id]) }}" class="px-2 py-1 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors">
+                                + Nuevo
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-green-100 hover:shadow-lg transition-all">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-green-500 text-white flex items-center justify-center shadow-inner">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Hitos</p>
+                                    <p class="text-2xl font-bold text-gray-900">{{ $milestonesCount }}</p>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 text-[10px] font-bold rounded-full {{ $milestonesDelayed > 0 ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700' }}">
+                                {{ $milestonesDelayed }} retraso(s)
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-4">Seguimiento del roadmap</p>
+                        <div class="flex items-center justify-between text-xs font-semibold">
+                            <a href="{{ route('plans.milestones.index', $plan) }}" class="text-green-600 hover:text-green-800 flex items-center gap-1">
+                                Ver hitos
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </a>
+                            <a href="{{ route('plans.milestones.create', $plan) }}" class="px-2 py-1 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors">
+                                + Nuevo
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-orange-100 hover:shadow-lg transition-all">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 text-white flex items-center justify-center shadow-inner">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Tareas</p>
+                                    <p class="text-2xl font-bold text-gray-900">{{ $tasksCount }}</p>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 text-[10px] font-bold rounded-full {{ $tasksOverdue > 0 ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700' }}">
+                                {{ $tasksOverdue }} vencida(s)
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-4">Backlog operativo y acciones</p>
+                        <div class="flex items-center justify-between text-xs font-semibold">
+                            <a href="{{ route('tasks.index', ['plan_id' => $plan->id]) }}" class="text-orange-600 hover:text-orange-800 flex items-center gap-1">
+                                Ver tareas
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </a>
+                            <a href="{{ route('tasks.create', ['plan_id' => $plan->id]) }}" class="px-2 py-1 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition-colors">
+                                + Nueva
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-red-100 hover:shadow-lg transition-all">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-red-500 text-white flex items-center justify-center shadow-inner">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Riesgos</p>
+                                    <p class="text-2xl font-bold text-gray-900">{{ $risksCount }}</p>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 text-[10px] font-bold rounded-full {{ $risksOpen > 0 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700' }}">
+                                {{ $risksOpen }} abiertos
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-4">Gestión de riesgos operativos</p>
+                        <div class="flex items-center justify-between text-xs font-semibold">
+                            <a href="{{ route('risks.index', ['plan_id' => $plan->id]) }}" class="text-red-600 hover:text-red-800 flex items-center gap-1">
+                                Ver riesgos
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </a>
+                            <a href="{{ route('risks.create', ['plan_id' => $plan->id]) }}" class="px-2 py-1 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors">
+                                + Nuevo
+                            </a>
+                        </div>
         </div>
     </div>
+    @endif
 
-    @if($plan->planType && str_contains(strtolower($plan->planType->name), 'desarrollo interno'))
+    @if($isInternalPlan && $activeTab === 'organization')
     <!-- Tab Content: Organización (solo Plan Desarrollo Interno) -->
-    <div x-show="activeTab === 'organization'" class="mt-6" x-data="{ orgSubTab: 'map' }" style="display: none;">
+    <div class="mt-6" x-data="{ orgSubTab: 'map' }">
         <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-emerald-500">
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-3">
@@ -350,6 +502,14 @@
                                 </svg>
                                 Talento
                             </button>
+                            <button @click="orgSubTab = 'profiles'" 
+                                    :class="orgSubTab === 'profiles' ? 'bg-gradient-to-r from-indigo-600 to-blue-500 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'"
+                                    class="whitespace-nowrap py-2 px-4 rounded-lg font-semibold text-sm transition-all flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                                Perfiles
+                            </button>
                         </nav>
                     </div>
                 </div>
@@ -388,12 +548,20 @@
                                         @if($line->users->count() > 0)
                                             <div class="flex flex-wrap gap-2">
                                                 @foreach($line->users as $member)
-                                                    <div class="px-2 py-1 bg-white rounded-full shadow-sm border border-gray-200 flex items-center gap-2 text-[11px] text-gray-700">
-                                                        <span class="w-5 h-5 rounded-full bg-gradient-to-br from-red-500 to-orange-500 text-white flex items-center justify-center text-[9px] font-bold">
-                                                            {{ $member->initials() }}
+                                                    <a href="{{ route('profile.show', $member) }}" 
+                                                       class="px-2 py-1 bg-white rounded-full shadow-sm border {{ $member->profile_completion_percent >= 100 ? 'border-green-300' : ($member->profile_completion_percent >= 70 ? 'border-yellow-300' : 'border-red-300') }} flex items-center gap-2 text-[11px] text-gray-700 hover:shadow-md transition-all group">
+                                                        <span class="w-5 h-5 rounded-full bg-gradient-to-br from-red-500 to-orange-500 text-white flex items-center justify-center text-[9px] font-bold overflow-hidden">
+                                                            @if($member->avatar_url)
+                                                                <img src="{{ $member->avatar_url }}" alt="{{ $member->name }}" class="w-full h-full object-cover">
+                                                            @else
+                                                                {{ $member->initials() }}
+                                                            @endif
                                                         </span>
-                                                        <span>{{ $member->name }}</span>
-                                                    </div>
+                                                        <span class="group-hover:text-red-600 transition-colors">{{ $member->name }}</span>
+                                                        <span class="px-1.5 py-0.5 text-[9px] font-bold rounded-full {{ $member->profile_completion_percent >= 100 ? 'bg-green-100 text-green-800' : ($member->profile_completion_percent >= 70 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
+                                                            {{ $member->profile_completion_percent ?? 0 }}%
+                                                        </span>
+                                                    </a>
                                                 @endforeach
                                             </div>
                                         @else
@@ -422,12 +590,20 @@
                                 </div>
                                 <div class="flex flex-wrap gap-2">
                                     @foreach($usersInRole as $member)
-                                        <div class="px-3 py-1.5 bg-white rounded-full shadow-sm border border-gray-200 flex items-center gap-2 text-xs text-gray-700">
-                                            <span class="w-6 h-6 rounded-full bg-gradient-to-br from-red-500 to-orange-500 text-white flex items-center justify-center text-[10px] font-bold">
-                                                {{ $member->initials() }}
+                                        <a href="{{ route('profile.show', $member) }}" 
+                                           class="px-3 py-1.5 bg-white rounded-full shadow-sm border {{ $member->profile_completion_percent >= 100 ? 'border-green-300' : ($member->profile_completion_percent >= 70 ? 'border-yellow-300' : 'border-red-300') }} flex items-center gap-2 text-xs text-gray-700 hover:shadow-md transition-all group">
+                                            <span class="w-6 h-6 rounded-full bg-gradient-to-br from-red-500 to-orange-500 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden">
+                                                @if($member->avatar_url)
+                                                    <img src="{{ $member->avatar_url }}" alt="{{ $member->name }}" class="w-full h-full object-cover">
+                                                @else
+                                                    {{ $member->initials() }}
+                                                @endif
                                             </span>
-                                            <span>{{ $member->name }}</span>
-                                        </div>
+                                            <span class="group-hover:text-red-600 transition-colors">{{ $member->name }}</span>
+                                            <span class="px-1.5 py-0.5 text-[9px] font-bold rounded-full {{ $member->profile_completion_percent >= 100 ? 'bg-green-100 text-green-800' : ($member->profile_completion_percent >= 70 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
+                                                {{ $member->profile_completion_percent ?? 0 }}%
+                                            </span>
+                                        </a>
                                     @endforeach
                                 </div>
                             </div>
@@ -436,7 +612,7 @@
                 </div>
 
                 <!-- Subpestaña: Capacidad (Heatmap) -->
-                <div x-show="orgSubTab === 'capacity'" x-transition style="display: none;">
+                <div x-show="orgSubTab === 'capacity'" x-transition>
                     @if(isset($capacityHeatmap) && count($capacityHeatmap) > 0)
                     <div class="mb-6">
                         <h3 class="text-sm font-bold text-gray-900 mb-4">Heatmap de Capacidad por Línea de Servicio</h3>
@@ -532,7 +708,7 @@
                 </div>
 
                 <!-- Subpestaña: Talento (Pirámide) -->
-                <div x-show="orgSubTab === 'talent'" x-transition style="display: none;">
+                <div x-show="orgSubTab === 'talent'" x-transition>
                     @if(isset($talentPyramid))
                     <div class="mb-6">
                         <h3 class="text-sm font-bold text-gray-900 mb-4">Pirámide de Talento</h3>
@@ -572,6 +748,148 @@
                     </div>
                     @endif
                 </div>
+
+                <!-- Subpestaña: Perfiles -->
+                <div x-show="orgSubTab === 'profiles'" x-transition>
+                    <div class="space-y-6">
+                        <!-- Estadísticas de Perfiles -->
+                        @if(isset($profileStats))
+                        <div class="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl p-5 border-2 border-indigo-200">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-blue-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                                    👤
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-900">Estado de Perfiles del Equipo</h3>
+                                    <p class="text-xs text-gray-600">Completitud y datos de los perfiles de usuario</p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                                <div class="bg-white rounded-lg p-3 border border-indigo-100">
+                                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Completitud Media</p>
+                                    <p class="text-2xl font-bold text-indigo-900">{{ $profileStats['avg_completion'] }}%</p>
+                                    <div class="mt-2 w-full bg-gray-200 rounded-full h-1.5">
+                                        <div class="bg-gradient-to-r from-indigo-500 to-blue-500 h-1.5 rounded-full transition-all" 
+                                             style="width: {{ $profileStats['avg_completion'] }}%"></div>
+                                    </div>
+                                </div>
+                                <div class="bg-white rounded-lg p-3 border border-green-100">
+                                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Completos</p>
+                                    <p class="text-2xl font-bold text-green-900">{{ $profileStats['complete_profiles'] }}</p>
+                                    <p class="text-xs text-gray-600 mt-1">Perfiles al 100%</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-3 border border-yellow-100">
+                                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Incompletos</p>
+                                    <p class="text-2xl font-bold text-yellow-900">{{ $profileStats['incomplete_profiles'] }}</p>
+                                    <p class="text-xs text-gray-600 mt-1">Pendientes</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-3 border border-purple-100">
+                                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Competencias</p>
+                                    <p class="text-2xl font-bold text-purple-900">{{ $profileStats['total_competencies'] }}</p>
+                                    <p class="text-xs text-gray-600 mt-1">Total evaluadas</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-3 border border-amber-100">
+                                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Certificaciones</p>
+                                    <p class="text-2xl font-bold text-amber-900">{{ $profileStats['total_certifications'] }}</p>
+                                    <p class="text-xs text-gray-600 mt-1">Total obtenidas</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-3 border border-pink-100">
+                                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Avatares</p>
+                                    <p class="text-2xl font-bold text-pink-900">{{ $profileStats['users_with_avatar'] }}/{{ $organizationStats['total_people'] ?? 0 }}</p>
+                                    <p class="text-xs text-gray-600 mt-1">Con foto</p>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-gray-900">Perfiles del Equipo</h3>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-gray-500">Ordenar por:</span>
+                                <select x-model="profileSort" 
+                                        class="text-xs border border-gray-300 rounded-lg px-2 py-1 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="completion">Completitud</option>
+                                    <option value="name">Nombre</option>
+                                    <option value="role">Rol</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" 
+                             x-data="{ profileSort: 'completion' }"
+                             x-init="$watch('profileSort', () => {})">
+                            @foreach($teamUsers->sortByDesc('profile_completion_percent') as $user)
+                            <div class="bg-white rounded-xl border-2 {{ $user->profile_completion_percent >= 100 ? 'border-green-300' : ($user->profile_completion_percent >= 70 ? 'border-yellow-300' : 'border-red-300') }} p-4 hover:shadow-lg transition-all">
+                                <div class="flex items-start gap-4">
+                                    <!-- Avatar -->
+                                    <a href="{{ route('profile.show', $user) }}" class="flex-shrink-0">
+                                        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-xl font-bold text-white border-2 border-white shadow-lg overflow-hidden">
+                                            @if($user->avatar_url)
+                                                <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="w-full h-full object-cover">
+                                            @else
+                                                {{ $user->initials() }}
+                                            @endif
+                                        </div>
+                                    </a>
+                                    
+                                    <!-- Información -->
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <div>
+                                                <a href="{{ route('profile.show', $user) }}" class="text-base font-bold text-gray-900 hover:text-red-600 transition-colors">
+                                                    {{ $user->name }}
+                                                </a>
+                                                @if($user->internalRole)
+                                                    <p class="text-xs text-gray-600 mt-0.5">{{ $user->internalRole->name }}</p>
+                                                @endif
+                                            </div>
+                                            <span class="px-2 py-1 text-[10px] font-bold rounded-full {{ $user->profile_completion_percent >= 100 ? 'bg-green-100 text-green-800' : ($user->profile_completion_percent >= 70 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
+                                                {{ $user->profile_completion_percent ?? 0 }}%
+                                            </span>
+                                        </div>
+                                        
+                                        <!-- Barra de progreso -->
+                                        <div class="w-full bg-gray-200 rounded-full h-2 mb-3">
+                                            <div class="h-2 rounded-full transition-all {{ $user->profile_completion_percent >= 100 ? 'bg-gradient-to-r from-green-500 to-green-600' : ($user->profile_completion_percent >= 70 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' : 'bg-gradient-to-r from-red-500 to-red-600') }}" 
+                                                 style="width: {{ $user->profile_completion_percent ?? 0 }}%"></div>
+                                        </div>
+                                        
+                                        <!-- Métricas rápidas -->
+                                        <div class="grid grid-cols-3 gap-2 text-center">
+                                            <div class="bg-purple-50 rounded-lg p-2">
+                                                <p class="text-xs font-bold text-purple-900">{{ $user->competencies->count() }}</p>
+                                                <p class="text-[10px] text-purple-600">Competencias</p>
+                                            </div>
+                                            <div class="bg-amber-50 rounded-lg p-2">
+                                                <p class="text-xs font-bold text-amber-900">{{ $user->userCertifications->count() }}</p>
+                                                <p class="text-[10px] text-amber-600">Certificaciones</p>
+                                            </div>
+                                            <div class="bg-blue-50 rounded-lg p-2">
+                                                <p class="text-xs font-bold text-blue-900">
+                                                    @if($user->avatar_url) ✅ @else ❌ @endif
+                                                </p>
+                                                <p class="text-[10px] text-blue-600">Avatar</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Acciones -->
+                                        <div class="mt-3 pt-3 border-t border-gray-200">
+                                            <a href="{{ route('profile.show', $user) }}" 
+                                               class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                                </svg>
+                                                Ver perfil completo
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
             @else
                 <div class="text-center py-10">
                     <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -584,9 +902,9 @@
     </div>
     @endif
 
-    @if($plan->planType && str_contains(strtolower($plan->planType->name), 'desarrollo interno'))
+    @if($isInternalPlan && $activeTab === 'competencies')
     <!-- Tab Content: Competencias -->
-    <div x-show="activeTab === 'competencies'" class="mt-6" style="display: none;">
+    <div class="mt-6">
         <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-purple-500">
             <div class="flex items-center gap-3 mb-6">
                 <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
@@ -602,9 +920,11 @@
             @livewire('plans.plan-desarrollo-competencias', ['plan' => $plan], key('competencies-' . $plan->id))
         </div>
     </div>
+    @endif
 
+    @if($isInternalPlan && $activeTab === 'infrastructure')
     <!-- Tab Content: Infraestructura Técnica -->
-    <div x-show="activeTab === 'infrastructure'" class="mt-6" style="display: none;">
+    <div class="mt-6">
         <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-500">
             <div class="flex items-center gap-3 mb-6">
                 <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
@@ -620,129 +940,197 @@
             @livewire('plans.plan-desarrollo-infraestructura', ['plan' => $plan], key('infrastructure-' . $plan->id))
         </div>
     </div>
+    @endif
 
-    <!-- Tab Content: Procesos Operativos -->
-    <div x-show="activeTab === 'processes'" class="mt-6" style="display: none;">
-        <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-orange-500">
-            <div class="flex items-center justify-between mb-6">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
-                        🔄
-                    </div>
-                    <div>
-                        <h2 class="text-2xl font-bold text-gray-800">Procesos Operativos</h2>
-                        <p class="text-xs text-gray-500">Mapa de procesos y mejoras operativas</p>
-                    </div>
-                </div>
-            </div>
-            <div class="text-center py-12">
-                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                </svg>
-                <p class="text-sm text-gray-500 mb-2">Sección en desarrollo</p>
-                <p class="text-xs text-gray-400">Próximamente: Mapa de procesos, diagramas de flujo y mejoras</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tab Content: Calidad -->
-    <div x-show="activeTab === 'quality'" class="mt-6" style="display: none;">
-        <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500">
-            <div class="flex items-center justify-between mb-6">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
-                        ✅
-                    </div>
-                    <div>
-                        <h2 class="text-2xl font-bold text-gray-800">Calidad</h2>
-                        <p class="text-xs text-gray-500">Estándares de calidad, métricas y procesos de QA</p>
-                    </div>
-                </div>
-            </div>
-            <div class="text-center py-12">
-                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <p class="text-sm text-gray-500 mb-2">Sección en desarrollo</p>
-                <p class="text-xs text-gray-400">Próximamente: Estándares de calidad, métricas y auditorías</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tab Content: Formación -->
-    <div x-show="activeTab === 'training'" class="mt-6" style="display: none;">
+    @if($isInternalPlan && $activeTab === 'certifications')
+    <!-- Tab Content: Certificaciones -->
+    <div class="mt-6">
         <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-yellow-500">
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
-                        📚
+                    <div class="w-10 h-10 bg-gradient-to-br from-yellow-500 to-amber-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                        🏆
                     </div>
                     <div>
-                        <h2 class="text-2xl font-bold text-gray-800">Formación</h2>
-                        <p class="text-xs text-gray-500">Plan de formación y seguimiento de competencias</p>
+                        <h2 class="text-2xl font-bold text-gray-800">Certificaciones</h2>
+                        <p class="text-xs text-gray-500">
+                            Gestión de certificaciones, roadmap personalizado y gamificación.
+                        </p>
                     </div>
                 </div>
             </div>
-            <div class="text-center py-12">
-                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                </svg>
-                <p class="text-sm text-gray-500 mb-2">Sección en desarrollo</p>
-                <p class="text-xs text-gray-400">Próximamente: Plan de formación, cursos y seguimiento</p>
-            </div>
+            @livewire('plans.plan-desarrollo-certificaciones', ['plan' => $plan], key('certifications-' . $plan->id))
         </div>
     </div>
+    @endif
 
-    <!-- Tab Content: I+D -->
-    <div x-show="activeTab === 'rd'" class="mt-6" style="display: none;">
+    @if($isInternalPlan && $activeTab === 'innovation-tooling')
+    <!-- Tab Content: I+D y Tooling Interno -->
+    <div class="mt-6">
         <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-indigo-500">
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
-                        🔬
+                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-blue-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                        🚀
                     </div>
                     <div>
-                        <h2 class="text-2xl font-bold text-gray-800">I+D</h2>
-                        <p class="text-xs text-gray-500">Proyectos de investigación y desarrollo</p>
+                        <h2 class="text-2xl font-bold text-gray-800">I+D y Tooling Interno</h2>
+                        <p class="text-xs text-gray-500">Visión trimestral, priorización y gobierno de herramientas</p>
                     </div>
                 </div>
             </div>
-            <div class="text-center py-12">
-                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
-                </svg>
-                <p class="text-sm text-gray-500 mb-2">Sección en desarrollo</p>
-                <p class="text-xs text-gray-400">Próximamente: Proyectos de I+D, roadmap y presupuesto</p>
+            <div class="space-y-6">
+                <div class="bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Visión Trimestral</p>
+                            <h3 class="text-lg font-bold text-gray-900">Roadmap de Investigación</h3>
+                        </div>
+                        <span class="px-3 py-1 text-[10px] font-bold rounded-full bg-indigo-100 text-indigo-700">2025 Q1 - Q2</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="bg-white rounded-lg p-4 border border-indigo-100">
+                            <p class="text-xs font-semibold text-indigo-500 uppercase tracking-wide">Q1</p>
+                            <p class="text-sm font-bold text-gray-900">Automatización de Recon</p>
+                            <p class="text-xs text-gray-500 mt-1">PoC con scripting interno, integración con pipelines.</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 border border-indigo-100">
+                            <p class="text-xs font-semibold text-indigo-500 uppercase tracking-wide">Q2</p>
+                            <p class="text-sm font-bold text-gray-900">Inteligencia de Activos</p>
+                            <p class="text-xs text-gray-500 mt-1">Construir monitor de superficie de ataque multi cliente.</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 border border-indigo-100">
+                            <p class="text-xs font-semibold text-indigo-500 uppercase tracking-wide">Q3</p>
+                            <p class="text-sm font-bold text-gray-900">Tooling de Red Team</p>
+                            <p class="text-xs text-gray-500 mt-1">Framework modular interno con control de versiones.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 p-5">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-lg">⚖️</span>
+                            <h3 class="text-sm font-bold text-gray-900">Priorizar desarrollo vs. herramientas externas</h3>
+                        </div>
+                        <ul class="space-y-2 text-xs text-gray-700">
+                            <li class="flex items-start gap-2"><span class="text-blue-500">•</span> Evaluar ROI interno vs. coste de licencias.</li>
+                            <li class="flex items-start gap-2"><span class="text-blue-500">•</span> Matriz de criticidad (IP propia, diferenciación, compliance).</li>
+                            <li class="flex items-start gap-2"><span class="text-blue-500">•</span> Integrar al roadmap aquellas herramientas que habiliten nuevos servicios.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 p-5">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-lg">🛠️</span>
+                            <h3 class="text-sm font-bold text-gray-900">Pipeline de aprobación de nuevas herramientas</h3>
+                        </div>
+                        <ol class="space-y-2 text-xs text-gray-700 list-decimal pl-4">
+                            <li>Solicitud y business case (seguridad / negocio / coste).</li>
+                            <li>Revisión de OPSEC y jurídica (LTD, compliance, licencias).</li>
+                            <li>Prueba controlada (POC) + checklist de incident response.</li>
+                            <li>Registro en artefactos oficiales y habilitación por rol.</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="bg-white rounded-xl border border-gray-200 p-5">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-lg">📦</span>
+                            <h3 class="text-sm font-bold text-gray-900">Control de artefactos y repos privados</h3>
+                        </div>
+                        <ul class="space-y-2 text-xs text-gray-700">
+                            <li class="flex items-start gap-2"><span class="text-gray-500">•</span> Catálogo único de tooling con owners, repos y permisos.</li>
+                            <li class="flex items-start gap-2"><span class="text-gray-500">•</span> Versionado semántico + changelog de componentes.</li>
+                            <li class="flex items-start gap-2"><span class="text-gray-500">•</span> Auditoría trimestral de accesos y dependencias.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-white rounded-xl border border-gray-200 p-5">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-lg">🔐</span>
+                            <h3 class="text-sm font-bold text-gray-900">Playbook de Tooling Seguro</h3>
+                        </div>
+                        <ul class="space-y-2 text-xs text-gray-700">
+                            <li class="flex items-start gap-2"><span class="text-gray-500">•</span> Checklist OPSEC para releases internos.</li>
+                            <li class="flex items-start gap-2"><span class="text-gray-500">•</span> Registro de dependencias críticas (API keys, third parties).</li>
+                            <li class="flex items-start gap-2"><span class="text-gray-500">•</span> Rotación automática de secretos y logs de distribución.</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-
-    <!-- Tab Content: OPSEC -->
-    <div x-show="activeTab === 'opsec'" class="mt-6" style="display: none;">
-        <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-red-500">
+    @endif
+    
+    @if($isInternalPlan && $activeTab === 'team-culture')
+    <!-- Tab Content: Cultura de Equipo y Liderazgo -->
+    <div class="mt-6">
+        <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-pink-500">
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-pink-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
-                        🔒
+                    <div class="w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                        🤝
                     </div>
                     <div>
-                        <h2 class="text-2xl font-bold text-gray-800">OPSEC</h2>
-                        <p class="text-xs text-gray-500">Políticas de seguridad y análisis de riesgos</p>
+                        <h2 class="text-2xl font-bold text-gray-800">Cultura de equipo y liderazgo</h2>
+                        <p class="text-xs text-gray-500">Rutinas de sincronía, crecimiento técnico y principios culturales</p>
                     </div>
                 </div>
             </div>
-            <div class="text-center py-12">
-                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                </svg>
-                <p class="text-sm text-gray-500 mb-2">Sección en desarrollo</p>
-                <p class="text-xs text-gray-400">Próximamente: Políticas de seguridad, análisis de riesgos y auditorías</p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl border border-pink-200 p-5">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-lg">🗓️</span>
+                        <h3 class="text-sm font-bold text-gray-900">Rutinas de sincronía</h3>
+                    </div>
+                    <ul class="space-y-2 text-xs text-gray-700">
+                        <li><span class="font-semibold text-pink-600">Daily Ops (15’)</span> — foco en bloqueos críticos y cobertura operativa.</li>
+                        <li><span class="font-semibold text-pink-600">Weekly Replan (30’)</span> — revisión de KPIs de ejecución y reasignación.</li>
+                        <li><span class="font-semibold text-pink-600">Monthly Deep Dive</span> — retrospectiva táctico/estratégica (roadmap, riesgos, staffing).</li>
+                    </ul>
+                </div>
+                <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 p-5">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-lg">🧪</span>
+                        <h3 class="text-sm font-bold text-gray-900">Días técnicos / I+D Days</h3>
+                    </div>
+                    <p class="text-xs text-gray-600 mb-3">Bloques específicos para innovación y mejora interna:</p>
+                    <ul class="space-y-2 text-xs text-gray-700">
+                        <li>1 día al mes reservado para research & tooling propio.</li>
+                        <li>Showcase interno de resultados (demo lightning de 10’).</li>
+                        <li>Repositorio de aprendizajes y propuestas de producto.</li>
+                    </ul>
+                </div>
+                <div class="bg-white rounded-xl border border-gray-200 p-5">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-lg">💬</span>
+                        <h3 class="text-sm font-bold text-gray-900">Feedback 360 interno</h3>
+                    </div>
+                    <ul class="space-y-2 text-xs text-gray-700">
+                        <li><span class="font-semibold text-gray-900">Quarterly 360:</span> managers ↔ ICs, managers ↔ managers.</li>
+                        <li><span class="font-semibold text-gray-900">Peer-review técnico:</span> checklist de code quality / OPSEC.</li>
+                        <li><span class="font-semibold text-gray-900">Radar de capacidades:</span> visión clara de gaps y objetivos personales.</li>
+                    </ul>
+                </div>
+                <div class="bg-white rounded-xl border border-gray-200 p-5">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-lg">🌟</span>
+                        <h3 class="text-sm font-bold text-gray-900">Principios culturales del departamento</h3>
+                    </div>
+                    <ol class="space-y-2 text-xs text-gray-700 list-decimal pl-4">
+                        <li><span class="font-semibold text-gray-900">Excelencia operativa primero:</span> la calidad mínima es la calidad de producción.</li>
+                        <li><span class="font-semibold text-gray-900">Compartir antes que competir:</span> toda mejora se documenta y comparte.</li>
+                        <li><span class="font-semibold text-gray-900">Seguridad es responsabilidad de todos:</span> OPSEC en cada entrega.</li>
+                        <li><span class="font-semibold text-gray-900">Aprender cada semana:</span> pequeños ciclos de mejora continua.</li>
+                        <li><span class="font-semibold text-gray-900">Feedback honesto y accionable:</span> sin sorpresas en las evaluaciones.</li>
+                    </ol>
+                </div>
             </div>
         </div>
     </div>
-
-    <!-- Tab Content: Roadmap Operativo -->
-    <div x-show="activeTab === 'operational-roadmap'" class="mt-6" style="display: none;">
+    @endif
+    
+    @if($isInternalPlan && $activeTab === 'operational-roadmap')
+    <!-- Tab Content: Roadmap -->
+    <div class="mt-6">
         <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-teal-500">
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-3">
@@ -750,18 +1138,12 @@
                         🗓️
                     </div>
                     <div>
-                        <h2 class="text-2xl font-bold text-gray-800">Roadmap Operativo</h2>
+                        <h2 class="text-2xl font-bold text-gray-800">Roadmap</h2>
                         <p class="text-xs text-gray-500">Vista Gantt de hitos operativos y dependencias</p>
                     </div>
                 </div>
             </div>
-            <div class="text-center py-12">
-                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                </svg>
-                <p class="text-sm text-gray-500 mb-2">Sección en desarrollo</p>
-                <p class="text-xs text-gray-400">Próximamente: Vista Gantt de hitos operativos e integración con milestones</p>
-            </div>
+            @livewire('plans.plan-desarrollo-roadmap-operativo', ['plan' => $plan], key('operational-roadmap-' . $plan->id))
         </div>
     </div>
     @endif
@@ -811,89 +1193,13 @@
     </div>
     @endif
     
-    <!-- Tab Content: Ejecución (KPIs, Hitos, Tareas, Riesgos) -->
-    <div x-show="activeTab === 'execution'" class="mt-6" style="display: none;">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <a href="{{ route('kpis.index', ['plan_id' => $plan->id]) }}" class="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all group">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                        </svg>
-                    </div>
-                </div>
-                <p class="text-gray-600 text-sm font-medium mb-2">KPIs</p>
-                <p class="text-4xl font-bold text-gray-900 mb-3">{{ $plan->kpis->count() }}</p>
-                <div class="flex items-center gap-2 text-blue-600 text-xs font-semibold">
-                    <span>Ver detalles</span>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </div>
-            </a>
-            
-            <a href="{{ route('plans.milestones.index', $plan) }}" class="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg hover:border-green-300 transition-all group">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                </div>
-                <p class="text-gray-600 text-sm font-medium mb-2">Hitos</p>
-                <p class="text-4xl font-bold text-gray-900 mb-3">{{ $plan->milestones->count() }}</p>
-                <div class="flex items-center gap-2 text-green-600 text-xs font-semibold">
-                    <span>Ver detalles</span>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </div>
-            </a>
-            
-            <a href="{{ route('tasks.index', ['plan_id' => $plan->id]) }}" class="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg hover:border-orange-300 transition-all group">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center group-hover:bg-orange-200 transition-colors">
-                        <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                        </svg>
-                    </div>
-                </div>
-                <p class="text-gray-600 text-sm font-medium mb-2">Tareas</p>
-                <p class="text-4xl font-bold text-gray-900 mb-3">{{ $plan->tasks->count() }}</p>
-                <div class="flex items-center gap-2 text-orange-600 text-xs font-semibold">
-                    <span>Ver detalles</span>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </div>
-            </a>
-            
-            <a href="{{ route('risks.index', ['plan_id' => $plan->id]) }}" class="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg hover:border-red-300 transition-all group">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center group-hover:bg-red-200 transition-colors">
-                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                        </svg>
-                    </div>
-                </div>
-                <p class="text-gray-600 text-sm font-medium mb-2">Riesgos</p>
-                <p class="text-4xl font-bold text-gray-900 mb-3">{{ $plan->risks->count() }}</p>
-                <div class="flex items-center gap-2 text-red-600 text-xs font-semibold">
-                    <span>Ver detalles</span>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </div>
-            </a>
-        </div>
-    </div>
-    
     <!-- Tab Content: Sectorial (Solo para Planes Comerciales) -->
-    @if($plan->planType && str_contains(strtolower($plan->planType->name), 'comercial'))
-    <div x-show="activeTab === 'sectorial'" class="mt-6" style="display: none;">
+    @if($isCommercialPlan && $activeTab === 'sectorial')
+    <div class="mt-6">
         @livewire('plans.plan-sector-analysis', ['plan' => $plan], key('sector-analysis-' . $plan->id))
     </div>
     @endif
 </div>
 @endsection
+
 

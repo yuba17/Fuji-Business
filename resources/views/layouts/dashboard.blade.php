@@ -18,8 +18,9 @@
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
+    @stack('styles')
 </head>
-<body class="font-sans antialiased bg-gray-50" 
+<body class="font-sans antialiased bg-gray-50 overflow-x-hidden" 
       x-data="layoutState()">
     <div class="min-h-screen flex">
         <!-- Sidebar Component -->
@@ -31,8 +32,8 @@
             <x-layout.header />
 
             <!-- Page Content -->
-            <main class="flex-1 overflow-y-auto bg-gray-50">
-                <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+            <main class="flex-1 overflow-y-auto overflow-x-hidden bg-gray-50">
+                <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 max-w-full">
                     @if(session('success'))
                         <x-ui.alert variant="success" class="mb-4">
                             {{ session('success') }}
@@ -64,6 +65,7 @@
          style="display: none;"></div>
 
     @livewireScripts
+    @stack('scripts')
 
     <script>
         function layoutState() {
