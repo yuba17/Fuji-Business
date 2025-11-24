@@ -41,9 +41,9 @@
         
         {{-- Pestañas mejoradas --}}
         <div class="border-b-2 border-gray-200">
-            <nav class="-mb-px flex space-x-8">
+            <nav class="-mb-px flex space-x-12">
                 <button wire:click="$set('viewMode', 'dashboard')" 
-                        class="py-4 px-1 border-b-2 font-semibold text-sm transition-all duration-300
+                        class="py-4 px-4 border-b-2 font-semibold text-sm transition-all duration-300
                         @if($viewMode === 'dashboard')
                             border-red-600 text-red-600
                         @else
@@ -57,7 +57,7 @@
                     </div>
                 </button>
                 <button wire:click="$set('viewMode', 'catalog')" 
-                        class="py-4 px-1 border-b-2 font-semibold text-sm transition-all duration-300
+                        class="py-4 px-4 border-b-2 font-semibold text-sm transition-all duration-300
                         @if($viewMode === 'catalog')
                             border-red-600 text-red-600
                         @else
@@ -71,7 +71,7 @@
                     </div>
                 </button>
                 <button wire:click="$set('viewMode', 'roadmap')" 
-                        class="py-4 px-1 border-b-2 font-semibold text-sm transition-all duration-300
+                        class="py-4 px-4 border-b-2 font-semibold text-sm transition-all duration-300
                         @if($viewMode === 'roadmap')
                             border-red-600 text-red-600
                         @else
