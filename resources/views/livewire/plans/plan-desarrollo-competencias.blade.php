@@ -143,36 +143,43 @@
                                             $target = $userComp['target'] ?? 0;
                                         @endphp
                                         <td class="px-3 py-3 text-center">
-                                            <button wire:click="openEvaluationModal({{ $user->id }}, {{ $competency->id }})" 
-                                                    class="w-full group">
-                                                <div class="flex flex-col items-center gap-1">
-                                                    @if($current > 0)
-                                                        <div class="relative">
-                                                            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold transition-all group-hover:scale-110
-                                                                @if($current >= 4) bg-green-100 text-green-800
-                                                                @elseif($current >= 3) bg-blue-100 text-blue-800
-                                                                @elseif($current >= 2) bg-yellow-100 text-yellow-800
-                                                                @else bg-red-100 text-red-800
-                                                                @endif">
-                                                                {{ $current }}
-                                                            </div>
-                                                            @if($target > 0 && $target > $current)
-                                                                <div class="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center text-[8px] text-white font-bold" 
-                                                                     title="Objetivo: {{ $target }}">
-                                                                    {{ $target }}
+                                            <div class="flex flex-col items-center gap-1">
+                                                <button wire:click="openEvaluationModal({{ $user->id }}, {{ $competency->id }})" 
+                                                        class="w-full group relative">
+                                                    <div class="flex flex-col items-center gap-1">
+                                                        @if($current > 0)
+                                                            <div class="relative">
+                                                                <div class="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold transition-all group-hover:scale-110
+                                                                    @if($current >= 4) bg-green-100 text-green-800
+                                                                    @elseif($current >= 3) bg-blue-100 text-blue-800
+                                                                    @elseif($current >= 2) bg-yellow-100 text-yellow-800
+                                                                    @else bg-red-100 text-red-800
+                                                                    @endif">
+                                                                    {{ $current }}
                                                                 </div>
-                                                            @endif
-                                                        </div>
-                                                    @else
-                                                        <div class="w-10 h-10 rounded-lg bg-gray-100 text-gray-400 flex items-center justify-center text-sm font-bold transition-all group-hover:bg-gray-200">
-                                                            -
-                                                        </div>
-                                                    @endif
-                                                    @if($target > 0 && $target > $current)
-                                                        <span class="text-[9px] text-orange-600 font-medium">Gap: {{ $target - $current }}</span>
-                                                    @endif
-                                                </div>
-                                            </button>
+                                                                @if($target > 0 && $target > $current)
+                                                                    <div class="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center text-[8px] text-white font-bold" 
+                                                                         title="Objetivo: {{ $target }}">
+                                                                        {{ $target }}
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                        @else
+                                                            <div class="w-10 h-10 rounded-lg bg-gray-100 text-gray-400 flex items-center justify-center text-sm font-bold transition-all group-hover:bg-gray-200">
+                                                                -
+                                                            </div>
+                                                        @endif
+                                                        @if($target > 0 && $target > $current)
+                                                            <span class="text-[9px] text-orange-600 font-medium">Gap: {{ $target - $current }}</span>
+                                                        @endif
+                                                    </div>
+                                                </button>
+                                                <a href="{{ route('profile.show', $user->id) }}" 
+                                                   class="text-[8px] text-indigo-600 hover:text-indigo-800 font-medium"
+                                                   title="Ver perfil">
+                                                    🔄 Perfil
+                                                </a>
+                                            </div>
                                         </td>
                                     @endforeach
                                     <td class="px-4 py-3 text-center">
@@ -267,15 +274,30 @@
                                         <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-3 border border-gray-200">
                                             <div class="flex items-center justify-between mb-2">
                                                 <div class="flex items-center gap-2">
-                                                    <span class="w-7 h-7 rounded-full bg-gradient-to-br from-red-500 to-orange-500 text-white flex items-center justify-center text-[10px] font-bold">
-                                                        {{ $user->initials() }}
+                                                    <a href="{{ route('profile.show', $user->id) }}" 
+                                                       class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                                                        <span class="w-7 h-7 rounded-full bg-gradient-to-br from-red-500 to-orange-500 text-white flex items-center justify-center text-[10px] font-bold">
+                                                            {{ $user->initials() }}
+                                                        </span>
+                                                        <span class="text-xs font-semibold text-gray-900">{{ $user->name }}</span>
+                                                    </a>
+                                                    <span class="px-1.5 py-0.5 bg-indigo-100 text-indigo-700 text-[9px] font-medium rounded-full" 
+                                                          title="Datos sincronizados desde el perfil del usuario">
+                                                        🔄 Perfil
                                                     </span>
-                                                    <span class="text-xs font-semibold text-gray-900">{{ $user->name }}</span>
                                                 </div>
-                                                <button wire:click="openEvaluationModal({{ $user->id }}, {{ $competency->id }})" 
-                                                        class="text-[10px] text-purple-600 hover:text-purple-800 font-medium">
-                                                    Evaluar
-                                                </button>
+                                                <div class="flex items-center gap-1">
+                                                    <a href="{{ route('profile.show', $user->id) }}" 
+                                                       class="text-[10px] text-indigo-600 hover:text-indigo-800 font-medium"
+                                                       title="Ver perfil">
+                                                        Ver
+                                                    </a>
+                                                    <span class="text-gray-300">|</span>
+                                                    <button wire:click="openEvaluationModal({{ $user->id }}, {{ $competency->id }})" 
+                                                            class="text-[10px] text-purple-600 hover:text-purple-800 font-medium">
+                                                        Evaluar
+                                                    </button>
+                                                </div>
                                             </div>
                                             <div class="flex items-center justify-between">
                                                 <div>

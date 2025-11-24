@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Plan;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-// use Barryvdh\DomPDF\Facade\Pdf; // Requiere: composer require barryvdh/laravel-dompdf
 
 class PresentationController extends Controller
 {
@@ -103,7 +102,7 @@ class PresentationController extends Controller
 
     /**
      * Exportar presentación a PowerPoint
-     * Nota: Requiere instalar phpoffice/phppresentation: composer require phpoffice/phppresentation
+     * Usa el servicio PowerPointService para generar presentaciones corporativas profesionales
      */
     public function exportPpt(Plan $plan)
     {
@@ -115,135 +114,20 @@ class PresentationController extends Controller
                 ->with('error', 'La funcionalidad de exportación a PowerPoint requiere instalar: composer require phpoffice/phppresentation');
         }
         
-        $plan->load([
-            'planType',
-            'area',
-            'manager',
-            'director',
-            'sections' => function($q) {
-                $q->orderBy('order');
-            },
-            'kpis' => function($q) {
-                $q->where('is_active', true);
-            },
-            'milestones' => function($q) {
-                $q->orderBy('target_date');
-            },
-            'risks' => function($q) {
-                $q->orderBy('category', 'desc');
-            },
-        ]);
-
-        $objPHPPowerPoint = new \PhpOffice\PhpPresentation\PhpPresentation();
-        
-        // Configurar propiedades del documento
-        $objPHPPowerPoint->getDocumentProperties()
-            ->setCreator('Strategos')
-            ->setTitle($plan->name)
-            ->setSubject('Presentación del Plan')
-            ->setDescription($plan->description)
-            ->setCreated(time());
-
-        // Slide 1: Portada
-        $slide = $objPHPPowerPoint->createSlide();
-        $shape = $slide->createRichTextShape()
-            ->setHeight(600)
-            ->setWidth(960)
-            ->setOffsetX(0)
-            ->setOffsetY(0);
-        $shape->getActiveParagraph()->getAlignment()->setHorizontal(\PhpOffice\PhpPresentation\Style\Alignment::HORIZONTAL_CENTER);
-        $shape->getActiveParagraph()->getAlignment()->setVertical(\PhpOffice\PhpPresentation\Style\Alignment::VERTICAL_CENTER);
-        $textRun = $shape->createTextRun($plan->name);
-        $textRun->getFont()->setBold(true)->setSize(48);
-        $textRun = $shape->createTextRun("\n\n" . $plan->description);
-        $textRun->getFont()->setSize(24);
-
-        // Slides de Secciones
-        foreach ($plan->sections as $section) {
-            $slide = $objPHPPowerPoint->createSlide();
-            $shape = $slide->createRichTextShape()
-                ->setHeight(600)
-                ->setWidth(960)
-                ->setOffsetX(0)
-                ->setOffsetY(0);
-            $textRun = $shape->createTextRun($section->title);
-            $textRun->getFont()->setBold(true)->setSize(36);
-            $textRun = $shape->createTextRun("\n\n" . strip_tags($section->content));
-            $textRun->getFont()->setSize(18);
-        }
-
-        // Slide de KPIs
-        if ($plan->kpis->count() > 0) {
-            $slide = $objPHPPowerPoint->createSlide();
-            $shape = $slide->createRichTextShape()
-                ->setHeight(600)
-                ->setWidth(960)
-                ->setOffsetX(0)
-                ->setOffsetY(0);
-            $textRun = $shape->createTextRun('Indicadores Clave (KPIs)');
-            $textRun->getFont()->setBold(true)->setSize(36);
+        try {
+            // Usar el servicio de PowerPoint para generar la presentación
+            $powerPointService = new \App\Services\PowerPointService();
+            $powerPointService->generatePlanPresentation($plan);
             
-            foreach ($plan->kpis->take(6) as $kpi) {
-                $textRun = $shape->createTextRun("\n\n" . $kpi->name . ": " . number_format($kpi->current_value, 2) . " " . $kpi->unit);
-                $textRun->getFont()->setSize(18);
-            }
-        }
-
-        // Slide de Milestones
-        if ($plan->milestones->count() > 0) {
-            $slide = $objPHPPowerPoint->createSlide();
-            $shape = $slide->createRichTextShape()
-                ->setHeight(600)
-                ->setWidth(960)
-                ->setOffsetX(0)
-                ->setOffsetY(0);
-            $textRun = $shape->createTextRun('Hitos del Plan');
-            $textRun->getFont()->setBold(true)->setSize(36);
+            // Guardar a archivo temporal y descargar
+            $tempFile = $powerPointService->saveToTempFile();
+            $filename = 'presentacion-' . $plan->slug . '.pptx';
             
-            foreach ($plan->milestones->take(8) as $milestone) {
-                $textRun = $shape->createTextRun("\n\n" . $milestone->name . " - " . ($milestone->target_date ? $milestone->target_date->format('d/m/Y') : 'Sin fecha'));
-                $textRun->getFont()->setSize(18);
-            }
+            return response()->download($tempFile, $filename)->deleteFileAfterSend(true);
+        } catch (\Exception $e) {
+            \Log::error('Error generando PowerPoint: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Error al generar la presentación: ' . $e->getMessage());
         }
-
-        // Slide de Riesgos
-        if ($plan->risks->count() > 0) {
-            $slide = $objPHPPowerPoint->createSlide();
-            $shape = $slide->createRichTextShape()
-                ->setHeight(600)
-                ->setWidth(960)
-                ->setOffsetX(0)
-                ->setOffsetY(0);
-            $textRun = $shape->createTextRun('Riesgos Identificados');
-            $textRun->getFont()->setBold(true)->setSize(36);
-            
-            foreach ($plan->risks->take(6) as $risk) {
-                $textRun = $shape->createTextRun("\n\n" . $risk->name . " - " . ucfirst($risk->category));
-                $textRun->getFont()->setSize(18);
-            }
-        }
-
-        // Slide Final
-        $slide = $objPHPPowerPoint->createSlide();
-        $shape = $slide->createRichTextShape()
-            ->setHeight(600)
-            ->setWidth(960)
-            ->setOffsetX(0)
-            ->setOffsetY(0);
-        $shape->getActiveParagraph()->getAlignment()->setHorizontal(\PhpOffice\PhpPresentation\Style\Alignment::HORIZONTAL_CENTER);
-        $shape->getActiveParagraph()->getAlignment()->setVertical(\PhpOffice\PhpPresentation\Style\Alignment::VERTICAL_CENTER);
-        $textRun = $shape->createTextRun('Gracias');
-        $textRun->getFont()->setBold(true)->setSize(48);
-        $textRun = $shape->createTextRun("\n\nStrategos - Gestión Estratégica");
-        $textRun->getFont()->setSize(24);
-
-        // Guardar el archivo
-        $oWriterPPTX = \PhpOffice\PhpPresentation\IOFactory::createWriter($objPHPPowerPoint, 'PowerPoint2007');
-        
-        $filename = 'presentacion-' . $plan->slug . '.pptx';
-        $tempFile = tempnam(sys_get_temp_dir(), 'ppt_');
-        $oWriterPPTX->save($tempFile);
-        
-        return response()->download($tempFile, $filename)->deleteFileAfterSend(true);
     }
 }

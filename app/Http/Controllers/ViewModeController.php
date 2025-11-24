@@ -20,7 +20,13 @@ class ViewModeController extends Controller
 
         $request->session()->put('view_mode', $mode);
 
-        return redirect()->back();
+        // Redirigir a la opción por defecto según el modo seleccionado
+        if ($mode === 'individual') {
+            return redirect()->route('dashboard');
+        } else {
+            // Modo equipo: redirigir a "Mi equipo"
+            return redirect()->route('teams.my');
+        }
     }
 }
 

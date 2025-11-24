@@ -27,7 +27,11 @@ class UserForm
                 DateTimePicker::make('email_verified_at'),
                 TextInput::make('password')
                     ->password()
-                    ->required(),
+                    ->required(fn (string $operation): bool => $operation === 'create')
+                    ->dehydrated(fn ($state) => filled($state))
+                    ->helperText(fn (string $operation): string => $operation === 'create' 
+                        ? 'La contraseña es obligatoria al crear un nuevo usuario.' 
+                        : 'Deja en blanco para mantener la contraseña actual.'),
                 Textarea::make('two_factor_secret')
                     ->columnSpanFull(),
                 Textarea::make('two_factor_recovery_codes')

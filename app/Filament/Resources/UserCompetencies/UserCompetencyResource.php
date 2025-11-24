@@ -23,7 +23,7 @@ class UserCompetencyResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-check';
     
-    protected static UnitEnum|string|null $navigationGroup = 'Desarrollo Interno';
+    protected static UnitEnum|string|null $navigationGroup = 'Competencias';
     
     protected static ?int $navigationSort = 2;
 

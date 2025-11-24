@@ -25,7 +25,7 @@ class CompetencyResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
     
-    protected static UnitEnum|string|null $navigationGroup = 'Desarrollo Interno';
+    protected static UnitEnum|string|null $navigationGroup = 'Competencias';
     
     protected static ?int $navigationSort = 1;
 

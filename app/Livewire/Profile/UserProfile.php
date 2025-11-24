@@ -5,6 +5,7 @@ namespace App\Livewire\Profile;
 use App\Models\User;
 use App\Models\Competency;
 use App\Models\Certification;
+use App\Models\UserCertification;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -34,6 +35,18 @@ class UserProfile extends Component
     
     // Certificaciones
     public $certifications = [];
+    
+    // Modal de certificación
+    public $showCertificationModal = false;
+    public $userCertificationId = null;
+    public $userCertificationCertificationId = null;
+    public $userCertificationObtainedAt = null;
+    public $userCertificationExpiresAt = null;
+    public $userCertificationCertificateNumber = '';
+    public $userCertificationStatus = 'active';
+    public $userCertificationPlannedDate = null;
+    public $userCertificationPriority = 0;
+    public $userCertificationNotes = '';
     
     public function mount(?int $userId = null)
     {
@@ -85,10 +98,13 @@ class UserProfile extends Component
                     'id' => $uc->id,
                     'certification_id' => $uc->certification_id,
                     'name' => $uc->certification->name,
+                    'provider' => $uc->certification->provider,
+                    'image_url' => $uc->certification->image_url,
                     'status' => $uc->status,
                     'obtained_at' => $uc->obtained_at?->format('Y-m-d'),
                     'expires_at' => $uc->expires_at?->format('Y-m-d'),
                     'planned_date' => $uc->planned_date?->format('Y-m-d'),
+                    'certificate_number' => $uc->certificate_number,
                 ];
             })
             ->toArray();
@@ -163,10 +179,137 @@ class UserProfile extends Component
         $this->activeTab = $tab;
     }
     
+    public function openCertificationModal($userCertificationId = null)
+    {
+        $this->userCertificationId = $userCertificationId;
+        
+        if ($userCertificationId) {
+            $uc = UserCertification::with('certification')->find($userCertificationId);
+            $this->userCertificationCertificationId = $uc->certification_id;
+            $this->userCertificationObtainedAt = $uc->obtained_at?->format('Y-m-d');
+            $this->userCertificationExpiresAt = $uc->expires_at?->format('Y-m-d');
+            $this->userCertificationCertificateNumber = $uc->certificate_number ?? '';
+            $this->userCertificationStatus = $uc->status;
+            $this->userCertificationPlannedDate = $uc->planned_date?->format('Y-m-d');
+            $this->userCertificationPriority = $uc->priority;
+            $this->userCertificationNotes = $uc->notes ?? '';
+        } else {
+            $this->resetCertificationForm();
+        }
+        
+        $this->showCertificationModal = true;
+    }
+    
+    public function closeCertificationModal()
+    {
+        $this->showCertificationModal = false;
+        $this->resetCertificationForm();
+    }
+    
+    public function resetCertificationForm()
+    {
+        $this->userCertificationId = null;
+        $this->userCertificationCertificationId = null;
+        $this->userCertificationObtainedAt = null;
+        $this->userCertificationExpiresAt = null;
+        $this->userCertificationCertificateNumber = '';
+        $this->userCertificationStatus = 'active';
+        $this->userCertificationPlannedDate = null;
+        $this->userCertificationPriority = 0;
+        $this->userCertificationNotes = '';
+    }
+    
+    public function saveCertification()
+    {
+        $validated = $this->validate([
+            'userCertificationCertificationId' => 'required|exists:certifications,id',
+            'userCertificationObtainedAt' => 'nullable|date',
+            'userCertificationExpiresAt' => 'nullable|date|after_or_equal:userCertificationObtainedAt',
+            'userCertificationCertificateNumber' => 'nullable|string|max:255',
+            'userCertificationStatus' => 'required|in:active,expired,revoked,in_progress,planned',
+            'userCertificationPlannedDate' => 'nullable|date',
+            'userCertificationPriority' => 'integer|min:0|max:5',
+            'userCertificationNotes' => 'nullable|string',
+        ], [], [
+            'userCertificationCertificationId' => 'certificación',
+            'userCertificationObtainedAt' => 'fecha de obtención',
+            'userCertificationExpiresAt' => 'fecha de vencimiento',
+            'userCertificationStatus' => 'estado',
+            'userCertificationPlannedDate' => 'fecha planificada',
+            'userCertificationPriority' => 'prioridad',
+        ]);
+
+        $data = [
+            'user_id' => $this->user->id,
+            'certification_id' => $validated['userCertificationCertificationId'],
+            'obtained_at' => $validated['userCertificationObtainedAt'] ?: ($validated['userCertificationStatus'] === 'active' ? now() : null),
+            'expires_at' => $validated['userCertificationExpiresAt'],
+            'certificate_number' => $validated['userCertificationCertificateNumber'],
+            'status' => $validated['userCertificationStatus'],
+            'planned_date' => $validated['userCertificationPlannedDate'],
+            'priority' => $validated['userCertificationPriority'],
+            'notes' => $validated['userCertificationNotes'],
+        ];
+
+        if ($this->userCertificationId) {
+            UserCertification::find($this->userCertificationId)->update($data);
+            session()->flash('message', 'Certificación actualizada correctamente');
+        } else {
+            // Verificar que no exista ya esta certificación para este usuario
+            $exists = UserCertification::where('user_id', $this->user->id)
+                ->where('certification_id', $validated['userCertificationCertificationId'])
+                ->exists();
+            
+            if ($exists) {
+                session()->flash('error', 'Ya tienes esta certificación vinculada');
+                return;
+            }
+            
+            UserCertification::create($data);
+            session()->flash('message', 'Certificación añadida correctamente');
+        }
+
+        $this->closeCertificationModal();
+        $this->loadUserData();
+        $this->updateProfileCompletion();
+    }
+    
+    public function deleteCertification($userCertificationId)
+    {
+        UserCertification::find($userCertificationId)->delete();
+        session()->flash('message', 'Certificación eliminada correctamente');
+        $this->loadUserData();
+        $this->updateProfileCompletion();
+    }
+    
     public function render()
     {
         $this->user->refresh();
         $this->user->load(['internalRole', 'area', 'manager', 'competencies', 'userCertifications.certification']);
+        
+        // Obtener certificaciones disponibles
+        // Si estamos editando, incluir la certificación actual; si no, excluir las que ya tiene
+        $userCertificationIds = $this->user->userCertifications()->pluck('certification_id');
+        $availableCertificationsQuery = Certification::where('is_active', true);
+        
+        if ($this->userCertificationId) {
+            // Al editar, incluir la certificación actual
+            $currentCertId = UserCertification::find($this->userCertificationId)?->certification_id;
+            if ($currentCertId) {
+                $availableCertificationsQuery->where(function($q) use ($userCertificationIds, $currentCertId) {
+                    $q->whereNotIn('id', $userCertificationIds)
+                      ->orWhere('id', $currentCertId);
+                });
+            }
+        } else {
+            // Al crear, excluir las que ya tiene
+            $availableCertificationsQuery->whereNotIn('id', $userCertificationIds);
+        }
+        
+        $availableCertifications = $availableCertificationsQuery
+            ->orderBy('category')
+            ->orderBy('name')
+            ->get();
         
         return view('livewire.profile.user-profile', [
             'availableCompetencies' => Competency::where('is_active', true)
@@ -177,10 +320,7 @@ class UserProfile extends Component
                 ->orderBy('category')
                 ->orderBy('name')
                 ->get(),
-            'availableCertifications' => Certification::where('is_active', true)
-                ->orderBy('category')
-                ->orderBy('name')
-                ->get(),
+            'availableCertifications' => $availableCertifications,
         ]);
     }
 }

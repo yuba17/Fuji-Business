@@ -1,4 +1,4 @@
-<div x-data="{ viewMode: 'inventory' }" x-cloak>
+<div x-data="{ viewMode: 'inventory' }">
     {{-- Header con acciones --}}
     <div class="flex items-center justify-between mb-6">
         <div>
@@ -44,8 +44,24 @@
     </div>
 
     {{-- Alertas --}}
-    @if($stats['critical_without_owner'] > 0 || $stats['high_utilization'] > 0 || $stats['without_owner'] > 0)
+    @if($stats['critical_without_owner'] > 0 || $stats['high_utilization'] > 0 || $stats['without_owner'] > 0 || $stats['expiring_licenses'] > 0)
         <div class="mb-6 space-y-2">
+            @if($stats['expiring_licenses'] > 0)
+                <div class="p-4 bg-red-50 border-l-4 border-red-400 rounded-r-lg">
+                    <div class="flex items-start gap-2">
+                        <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <p class="text-sm font-semibold text-red-800">⏰ Licencias Caducando</p>
+                            <p class="text-xs text-red-700 mt-1">
+                                {{ $stats['expiring_licenses'] }} licencia(s) {{ $stats['expired_licenses'] > 0 ? 'caducada(s) o ' : '' }}próxima(s) a caducar. 
+                                <button wire:click="$set('showExpiringLicenses', true)" class="underline font-semibold">Ver detalles</button>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            @endif
             @if($stats['critical_without_owner'] > 0)
                 <div class="p-4 bg-red-50 border-l-4 border-red-400 rounded-r-lg">
                     <div class="flex items-start gap-2">
@@ -89,47 +105,108 @@
     @endif
 
     {{-- Estadísticas rápidas --}}
-    <div class="grid grid-cols-1 lg:grid-cols-6 gap-4 mb-6">
-        <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
-            <p class="text-xs font-medium text-blue-700 uppercase tracking-wide">Total</p>
+    <div class="mb-6 overflow-x-auto pb-2">
+        <div class="flex gap-3 min-w-max">
+        <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200 min-w-[220px] flex-shrink-0">
+            <p class="text-xs font-medium text-blue-700 uppercase tracking-wide">Total de unidades</p>
             <p class="mt-2 text-3xl font-bold text-blue-900">{{ $stats['total'] }}</p>
-            <p class="mt-1 text-xs text-blue-800">Recursos</p>
+            <p class="mt-1 text-xs text-blue-800">{{ $stats['total_records'] }} registros</p>
+            <p class="mt-1 text-[11px] text-blue-700">Disponibles: <span class="font-semibold">{{ $stats['available_units'] }}</span> · En uso: <span class="font-semibold">{{ $stats['in_use_units'] }}</span> · Reservadas: <span class="font-semibold">{{ $stats['reserved_units'] }}</span></p>
         </div>
-        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
+        <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200 min-w-[180px] flex-shrink-0">
+            <p class="text-xs font-medium text-purple-700 uppercase tracking-wide">Licencias</p>
+            <p class="mt-2 text-3xl font-bold text-purple-900">{{ $stats['licenses'] }}</p>
+            <p class="mt-1 text-xs text-purple-800">Unidades de software</p>
+        </div>
+        <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200 min-w-[180px] flex-shrink-0">
+            <p class="text-xs font-medium text-gray-700 uppercase tracking-wide">Hardware</p>
+            <p class="mt-2 text-3xl font-bold text-gray-900">{{ $stats['hardware'] }}</p>
+            <p class="mt-1 text-xs text-gray-800">Unidades físicas</p>
+        </div>
+        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200 min-w-[180px] flex-shrink-0">
             <p class="text-xs font-medium text-green-700 uppercase tracking-wide">Activos</p>
             <p class="mt-2 text-3xl font-bold text-green-900">{{ $stats['active'] }}</p>
             <p class="mt-1 text-xs text-green-800">En operación</p>
         </div>
-        <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 border border-orange-200">
+        <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 border border-orange-200 min-w-[180px] flex-shrink-0">
             <p class="text-xs font-medium text-orange-700 uppercase tracking-wide">Planificados</p>
             <p class="mt-2 text-3xl font-bold text-orange-900">{{ $stats['planned'] }}</p>
-            <p class="mt-1 text-xs text-orange-800">En roadmap</p>
+            <p class="mt-1 text-xs text-orange-800">Unidades en roadmap</p>
         </div>
-        <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 border border-red-200">
+        <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 border border-red-200 min-w-[180px] flex-shrink-0">
             <p class="text-xs font-medium text-red-700 uppercase tracking-wide">Críticos</p>
             <p class="mt-2 text-3xl font-bold text-red-900">{{ $stats['critical'] }}</p>
-            <p class="mt-1 text-xs text-red-800">Recursos críticos</p>
+            <p class="mt-1 text-xs text-red-800">Unidades críticas</p>
         </div>
-        <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
+        <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200 min-w-[180px] flex-shrink-0">
             <p class="text-xs font-medium text-purple-700 uppercase tracking-wide">Coste Mensual</p>
             <p class="mt-2 text-3xl font-bold text-purple-900">€{{ number_format($stats['total_monthly_cost'], 0, ',', '.') }}</p>
             <p class="mt-1 text-xs text-purple-800">Total mensual</p>
         </div>
-        <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 border border-indigo-200">
+        <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 border border-indigo-200 min-w-[180px] flex-shrink-0">
             <p class="text-xs font-medium text-indigo-700 uppercase tracking-wide">Utilización</p>
             <p class="mt-2 text-3xl font-bold text-indigo-900">{{ number_format($stats['avg_utilization'], 0) }}%</p>
             <p class="mt-1 text-xs text-indigo-800">Promedio</p>
         </div>
+        </div>
     </div>
 
     {{-- Filtros --}}
-    <div class="bg-white rounded-xl shadow-md p-4 mb-6 border border-gray-200">
-        <div class="grid grid-cols-1 md:grid-cols-7 gap-4">
+    <div class="mb-6" x-data="{ filtersOpen: false }" x-cloak>
+        <div class="bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-2xl px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-inner border border-gray-200">
+                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6a2 2 0 012-2h6a2 2 0 012 2v13M9 19H7a2 2 0 01-2-2v-5h4m0-6H5m4 0V4"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm font-bold text-gray-900">Filtros avanzados</p>
+                    <p class="text-xs text-gray-500">Refina la vista por clase, estado, propietario y más.</p>
+                </div>
+            </div>
+            <button @click="filtersOpen = !filtersOpen"
+                    class="px-4 py-2 text-sm font-semibold rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-all">
+                <svg class="w-4 h-4" :class="filtersOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+                <span x-text="filtersOpen ? 'Ocultar filtros' : 'Mostrar filtros'"></span>
+            </button>
+        </div>
+        <div x-show="filtersOpen"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 -translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 -translate-y-2"
+             class="bg-white rounded-2xl shadow-md p-5 border border-gray-200 mt-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             <div>
                 <label class="block text-xs font-medium text-gray-700 mb-1">Buscar</label>
                 <input type="text" wire:model.live.debounce.300ms="search" 
                        placeholder="Nombre o descripción..."
                        class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Clase</label>
+                <select wire:model.live="filterInfrastructureClass" 
+                        class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                    <option value="">Todas</option>
+                    @foreach($attributeOptions['class'] ?? [] as $value => $label)
+                        <option value="{{ $value }}">{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Adquisición</label>
+                <select wire:model.live="acquisitionStatus" 
+                        class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                    <option value="">Todas</option>
+                    @foreach($attributeOptions['acquisition_status'] ?? [] as $value => $label)
+                        <option value="{{ $value }}">{{ $label }}</option>
+                    @endforeach
+                </select>
             </div>
             <div>
                 <label class="block text-xs font-medium text-gray-700 mb-1">Tipo</label>
@@ -166,10 +243,9 @@
                 <select wire:model.live="status" 
                         class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                     <option value="">Todos</option>
-                    <option value="active">Activo</option>
-                    <option value="maintenance">Mantenimiento</option>
-                    <option value="deprecated">Deprecado</option>
-                    <option value="planned">Planificado</option>
+                    @foreach($attributeOptions['operational_status'] ?? [] as $value => $label)
+                        <option value="{{ $value }}">{{ $label }}</option>
+                    @endforeach
                 </select>
             </div>
             <div>
@@ -182,17 +258,25 @@
                     @endforeach
                 </select>
             </div>
-            <div class="flex flex-col justify-end gap-2">
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" wire:model.live="showCriticalOnly" 
-                           class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                    <span class="text-xs font-medium text-gray-700">Solo críticos</span>
-                </label>
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" wire:model.live="showAlertsOnly" 
-                           class="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500">
-                    <span class="text-xs font-medium text-gray-700">Solo alertas</span>
-                </label>
+            <div class="sm:col-span-2 lg:col-span-1">
+                <label class="block text-xs font-medium text-gray-700 mb-2">Filtros rápidos</label>
+                <div class="flex flex-wrap gap-2">
+                    <label class="flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+                        <input type="checkbox" wire:model.live="showCriticalOnly" 
+                               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <span class="text-xs font-medium text-gray-700">Críticos</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+                        <input type="checkbox" wire:model.live="showAlertsOnly" 
+                               class="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500">
+                        <span class="text-xs font-medium text-gray-700">Alertas</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+                        <input type="checkbox" wire:model.live="showExpiringLicenses" 
+                               class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                        <span class="text-xs font-medium text-gray-700">Caducando</span>
+                    </label>
+                </div>
             </div>
         </div>
     </div>
@@ -252,113 +336,50 @@
     {{-- Vista: Inventario --}}
     <div x-show="viewMode === 'inventory'" x-transition>
         @if($infrastructures->count() > 0)
-            <div class="space-y-4">
-                @foreach($byCategory as $categoryName => $categoryInfrastructures)
-                    <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-                        <div class="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
-                            <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
-                                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/>
+            <div class="space-y-6">
+                {{-- Sección de Licencias --}}
+                @if($licenses && $licenses->isNotEmpty())
+                    <div class="bg-white rounded-xl shadow-md border border-purple-200 overflow-hidden">
+                        <div class="px-4 py-3 border-b border-purple-200 bg-gradient-to-r from-purple-50 to-purple-100">
+                            <h3 class="text-base font-bold text-purple-900 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                                 </svg>
-                                {{ $categoryName }}
-                                <span class="text-xs font-normal text-gray-500">({{ $categoryInfrastructures->count() }})</span>
+                                Licencias (Software)
+                                <span class="text-xs font-normal text-purple-600">({{ $licenses->count() }})</span>
                             </h3>
                         </div>
                         <div class="p-4">
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                @foreach($categoryInfrastructures as $infra)
-                                    <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-all">
-                                        <div class="flex items-start justify-between mb-2">
-                                            <div class="flex-1">
-                                                <div class="flex items-center gap-2 mb-1">
-                                                    <h4 class="text-sm font-bold text-gray-900">{{ $infra->name }}</h4>
-                                                    @if($infra->is_critical)
-                                                        <span class="px-2 py-0.5 bg-red-100 text-red-800 text-[10px] font-bold rounded-full">🔴 Crítica</span>
-                                                    @endif
-                                                    <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-medium rounded-full">
-                                                        {{ match($infra->status) {
-                                                            'active' => '✅ Activo',
-                                                            'maintenance' => '🔧 Mantenimiento',
-                                                            'deprecated' => '⚠️ Deprecado',
-                                                            'planned' => '📅 Planificado',
-                                                            default => $infra->status
-                                                        } }}
-                                                    </span>
-                                                </div>
-                                                @if($infra->description)
-                                                    <p class="text-xs text-gray-600 mb-2">{{ Str::limit($infra->description, 80) }}</p>
-                                                @endif
-                                            </div>
-                                        </div>
-                                        <div class="grid grid-cols-2 gap-2 text-xs mb-3">
-                                            @if($infra->type)
-                                                <div>
-                                                    <span class="text-gray-500">Tipo:</span>
-                                                    <span class="font-semibold text-gray-900">{{ $infra->type }}</span>
-                                                </div>
-                                            @endif
-                                            @if($infra->provider)
-                                                <div>
-                                                    <span class="text-gray-500">Proveedor:</span>
-                                                    <span class="font-semibold text-gray-900">{{ $infra->provider }}</span>
-                                                </div>
-                                            @endif
-                                            @if($infra->capacity)
-                                                <div>
-                                                    <span class="text-gray-500">Capacidad:</span>
-                                                    <span class="font-semibold text-gray-900">{{ $infra->capacity }}</span>
-                                                </div>
-                                            @endif
-                                            @if($infra->utilization_percent !== null)
-                                                <div>
-                                                    <span class="text-gray-500">Utilización:</span>
-                                                    <span class="font-semibold {{ $infra->utilization_percent > 80 ? 'text-red-600' : ($infra->utilization_percent > 60 ? 'text-orange-600' : 'text-green-600') }}">
-                                                        {{ $infra->utilization_percent }}%
-                                                    </span>
-                                                </div>
-                                            @endif
-                                            @if($infra->owner)
-                                                <div class="col-span-2">
-                                                    <span class="text-gray-500">Propietario:</span>
-                                                    <span class="font-semibold text-gray-900">{{ $infra->owner->name }}</span>
-                                                </div>
-                                            @elseif($infra->is_critical)
-                                                <div class="col-span-2">
-                                                    <span class="px-2 py-0.5 bg-red-100 text-red-800 text-[10px] font-bold rounded-full">⚠️ Sin propietario</span>
-                                                </div>
-                                            @endif
-                                        </div>
-                                        @if($infra->cost_monthly || $infra->cost_yearly)
-                                            <div class="mb-3 pt-2 border-t border-gray-200">
-                                                <p class="text-xs text-gray-500">Coste:</p>
-                                                <p class="text-sm font-bold text-gray-900">
-                                                    @if($infra->cost_monthly)
-                                                        €{{ number_format($infra->cost_monthly, 2, ',', '.') }}/mes
-                                                    @endif
-                                                    @if($infra->cost_yearly)
-                                                        <span class="text-gray-500">o</span> €{{ number_format($infra->cost_yearly, 2, ',', '.') }}/año
-                                                    @endif
-                                                </p>
-                                            </div>
-                                        @endif
-                                        <div class="flex items-center justify-end gap-2 pt-2 border-t border-gray-200">
-                                            <button wire:click="openInfrastructureModal({{ $infra->id }})" 
-                                                    class="text-[10px] text-blue-600 hover:text-blue-800 font-medium">
-                                                Editar
-                                            </button>
-                                            <span class="text-gray-300">|</span>
-                                            <button wire:click="deleteInfrastructure({{ $infra->id }})" 
-                                                    onclick="return confirm('¿Estás seguro de eliminar esta infraestructura?')"
-                                                    class="text-[10px] text-red-600 hover:text-red-800 font-medium">
-                                                Eliminar
-                                            </button>
-                                        </div>
-                                    </div>
+                                @foreach($licenses as $infra)
+                                    @include('livewire.plans.partials.infrastructure-card', ['infra' => $infra])
                                 @endforeach
                             </div>
                         </div>
                     </div>
-                @endforeach
+                @endif
+
+                {{-- Sección de Hardware --}}
+                @if($hardware && $hardware->isNotEmpty())
+                    <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                        <div class="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
+                            <h3 class="text-base font-bold text-gray-900 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/>
+                                </svg>
+                                Hardware (Físico)
+                                <span class="text-xs font-normal text-gray-500">({{ $hardware->count() }})</span>
+                            </h3>
+                        </div>
+                        <div class="p-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                @foreach($hardware as $infra)
+                                    @include('livewire.plans.partials.infrastructure-card', ['infra' => $infra])
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </div>
         @else
             <div class="text-center py-10 bg-white rounded-xl shadow-md border border-gray-200">
@@ -671,33 +692,120 @@
                                 @error('infrastructureName') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                             </div>
                             <div class="col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Modo de seguimiento *</label>
+                                <select wire:model="trackingMode"
+                                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                    <option value="individual">Individual (1 registro = 1 unidad)</option>
+                                    <option value="group">Grupo (inventario con múltiples unidades)</option>
+                                </select>
+                                @error('trackingMode') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                <p class="text-xs text-gray-500 mt-1">
+                                    Individual es ideal para recursos únicos (servidores, licencias nominativas). Grupo permite registrar cantidades y disponibilidad sin crear un registro por unidad.
+                                </p>
+                            </div>
+                            <div class="col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
                                 <textarea wire:model="infrastructureDescription" rows="3"
                                           class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"></textarea>
                             </div>
                             <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Clase *</label>
+                                <select wire:model="infrastructureClass" 
+                                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                    <option value="">Selecciona una clase...</option>
+                                    @foreach($attributeOptions['class'] ?? [] as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                                @error('infrastructureClass') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Estado de Adquisición *</label>
+                                <select wire:model="infrastructureAcquisitionStatus" 
+                                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                    <option value="">Selecciona un estado...</option>
+                                    @foreach($attributeOptions['acquisition_status'] ?? [] as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                                @error('infrastructureAcquisitionStatus') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Tipo *</label>
-                                <input type="text" wire:model="infrastructureType" 
-                                       placeholder="Ej: servidor, cloud, herramienta..."
-                                       class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                <select wire:model="infrastructureType" 
+                                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                    <option value="">Selecciona un tipo...</option>
+                                    @foreach($attributeOptions['type'] ?? [] as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
                                 @error('infrastructureType') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Categoría *</label>
-                                <input type="text" wire:model="infrastructureCategory" 
-                                       placeholder="Ej: hardware, software, cloud..."
-                                       class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                <select wire:model="infrastructureCategory" 
+                                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                    <option value="">Selecciona una categoría...</option>
+                                    @foreach($attributeOptions['category'] ?? [] as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
                                 @error('infrastructureCategory') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                             </div>
+                            @if($trackingMode === 'group')
+                                <div class="col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3 bg-white rounded-xl border border-gray-200 p-4">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Unidades totales *</label>
+                                        <input type="number" min="1" wire:model="quantityTotal"
+                                               class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all">
+                                        @error('quantityTotal') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">En uso</label>
+                                        <input type="number" min="0" wire:model="quantityInUse"
+                                               class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all">
+                                        @error('quantityInUse') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Reservadas</label>
+                                        <input type="number" min="0" wire:model="quantityReserved"
+                                               class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all">
+                                        @error('quantityReserved') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                    </div>
+                                    <div class="sm:col-span-3">
+                                        <p class="text-xs text-gray-500">
+                                            Disponibles: <span class="font-semibold text-gray-900">
+                                                {{ max(0, ($quantityTotal ?? 0) - ($quantityInUse ?? 0) - ($quantityReserved ?? 0)) }}
+                                            </span> unidades
+                                        </p>
+                                    </div>
+                                </div>
+                            @endif
+                            @if($infrastructureClass === 'license')
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Caducidad *</label>
+                                    <input type="date" wire:model="infrastructureExpiresAt" 
+                                           class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                    @error('infrastructureExpiresAt') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Días de Aviso</label>
+                                    <input type="number" wire:model="infrastructureRenewalReminderDays" min="1" max="365" 
+                                           placeholder="30"
+                                           class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                    <p class="text-xs text-gray-500 mt-1">Días antes de caducar para recibir aviso</p>
+                                </div>
+                            @endif
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Estado *</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Estado Operativo *</label>
                                 <select wire:model="infrastructureStatus" 
                                         class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-                                    <option value="active">Activo</option>
-                                    <option value="maintenance">Mantenimiento</option>
-                                    <option value="deprecated">Deprecado</option>
-                                    <option value="planned">Planificado</option>
+                                    <option value="">Selecciona un estado...</option>
+                                    @foreach($attributeOptions['operational_status'] ?? [] as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                    @endforeach
                                 </select>
+                                @error('infrastructureStatus') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Propietario</label>
@@ -711,9 +819,13 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Proveedor</label>
-                                <input type="text" wire:model="infrastructureProvider" 
-                                       placeholder="Ej: AWS, Azure, On-premise..."
-                                       class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                <select wire:model="infrastructureProvider" 
+                                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                    <option value="">Selecciona un proveedor...</option>
+                                    @foreach($attributeOptions['provider'] ?? [] as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Ubicación</label>

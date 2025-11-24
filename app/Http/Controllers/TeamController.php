@@ -29,7 +29,10 @@ class TeamController extends Controller
         $areas = $teamService->getUserTeamAreas($user);
 
         // Personas que reportan directamente a este usuario
-        $directReports = $user->directReports()->with(['roles', 'areas'])->orderBy('name')->get();
+        $directReports = $user->directReports()
+            ->with(['roles', 'areas', 'internalRole', 'competencies', 'userCertifications'])
+            ->orderBy('name')
+            ->get();
 
         // Managers a cargo (directos)
         $managers = $directReports->filter(fn (User $u) => $u->isManager());
@@ -37,9 +40,25 @@ class TeamController extends Controller
         // Personas a cargo de mis managers (segundo nivel)
         $secondLevelReports = User::query()
             ->whereIn('manager_id', $managers->pluck('id'))
-            ->with(['roles', 'areas', 'manager'])
+            ->with(['roles', 'areas', 'manager', 'internalRole', 'competencies', 'userCertifications'])
             ->orderBy('name')
             ->get();
+
+        // Todos los miembros del equipo para estadísticas de perfiles
+        $allTeamMembers = $directReports->merge($secondLevelReports)->unique('id');
+        
+        // Estadísticas de perfiles del equipo
+        $profileStats = [
+            'total_members' => $allTeamMembers->count(),
+            'avg_completion' => round($allTeamMembers->avg('profile_completion_percent') ?? 0, 1),
+            'complete_profiles' => $allTeamMembers->where('profile_completion_percent', '>=', 100)->count(),
+            'incomplete_profiles' => $allTeamMembers->where('profile_completion_percent', '<', 100)->count(),
+            'low_completion' => $allTeamMembers->where('profile_completion_percent', '<', 50)->count(),
+            'total_competencies' => $allTeamMembers->sum(fn($u) => $u->competencies->count()),
+            'total_certifications' => $allTeamMembers->sum(fn($u) => $u->userCertifications->count()),
+            'users_with_avatar' => $allTeamMembers->whereNotNull('avatar_url')->count(),
+            'users_without_avatar' => $allTeamMembers->whereNull('avatar_url')->count(),
+        ];
 
         return view('teams.my', [
             'user' => $user,
@@ -48,6 +67,8 @@ class TeamController extends Controller
             'directReports' => $directReports,
             'managers' => $managers,
             'secondLevelReports' => $secondLevelReports,
+            'allTeamMembers' => $allTeamMembers,
+            'profileStats' => $profileStats,
         ]);
     }
 

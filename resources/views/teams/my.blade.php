@@ -91,7 +91,7 @@
     </div>
 
     <!-- Tabs -->
-    <div class="bg-white rounded-2xl shadow-md border border-gray-200 px-3 py-2 flex items-center gap-2">
+    <div class="bg-white rounded-2xl shadow-md border border-gray-200 px-3 py-2 flex flex-wrap items-center gap-2">
         <button @click="activeTab = 'overview'"
                 :class="activeTab === 'overview' ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'"
                 class="px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all">
@@ -99,6 +99,14 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a2 2 0 012-2h2a2 2 0 012 2v2m4 0h-4m4 0a2 2 0 012 2m-2-2a2 2 0 00-2-2m-4 2H9m4 0a2 2 0 01-2 2m2-2a2 2 0 002 2m-6-2H5m4 0a2 2 0 01-2 2" />
             </svg>
             Resumen
+        </button>
+        <button @click="activeTab = 'profiles'"
+                :class="activeTab === 'profiles' ? 'bg-gradient-to-r from-indigo-600 to-purple-500 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'"
+                class="px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            Perfiles
         </button>
         <button @click="activeTab = 'direct-reports'"
                 :class="activeTab === 'direct-reports' ? 'bg-gradient-to-r from-emerald-600 to-green-500 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'"
@@ -344,6 +352,240 @@
             @include('teams.partials.team-table', ['members' => $allTreeMembers])
         @else
             <p class="text-center text-sm text-gray-500 py-6">Todavía no hay estructura de equipo definida bajo tu responsabilidad.</p>
+        @endif
+    </div>
+
+    <!-- Pestaña: Perfiles -->
+    <div x-show="activeTab === 'profiles'" x-transition class="space-y-6">
+        @if(isset($profileStats) && isset($allTeamMembers))
+            <!-- Estadísticas de Perfiles -->
+            <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-5 border-2 border-indigo-200">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                        📊
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-900">Estado de Perfiles del Equipo</h2>
+                        <p class="text-xs text-gray-600">Completitud y datos de los perfiles de tu equipo</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <div class="bg-white rounded-lg p-3 border border-indigo-100">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Completitud Media</p>
+                        <p class="text-2xl font-bold text-indigo-900">{{ $profileStats['avg_completion'] }}%</p>
+                        <div class="mt-2 w-full bg-gray-200 rounded-full h-1.5">
+                            <div class="bg-gradient-to-r from-indigo-500 to-purple-500 h-1.5 rounded-full transition-all" 
+                                 style="width: {{ $profileStats['avg_completion'] }}%"></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border border-green-100">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Completos</p>
+                        <p class="text-2xl font-bold text-green-900">{{ $profileStats['complete_profiles'] }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Perfiles al 100%</p>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border border-yellow-100">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Incompletos</p>
+                        <p class="text-2xl font-bold text-yellow-900">{{ $profileStats['incomplete_profiles'] }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Pendientes</p>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border border-red-100">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Baja Completitud</p>
+                        <p class="text-2xl font-bold text-red-900">{{ $profileStats['low_completion'] }}</p>
+                        <p class="text-xs text-gray-600 mt-1">&lt; 50% completado</p>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border border-purple-100">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Total Miembros</p>
+                        <p class="text-2xl font-bold text-purple-900">{{ $profileStats['total_members'] }}</p>
+                        <p class="text-xs text-gray-600 mt-1">En tu equipo</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                    <div class="bg-white rounded-lg p-3 border border-purple-100">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Competencias</p>
+                        <p class="text-xl font-bold text-purple-900">{{ $profileStats['total_competencies'] }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Total evaluadas</p>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border border-amber-100">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Certificaciones</p>
+                        <p class="text-xl font-bold text-amber-900">{{ $profileStats['total_certifications'] }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Total obtenidas</p>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border border-pink-100">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Con Avatar</p>
+                        <p class="text-xl font-bold text-pink-900">{{ $profileStats['users_with_avatar'] }}</p>
+                        <p class="text-xs text-gray-600 mt-1">de {{ $profileStats['total_members'] }}</p>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border border-gray-100">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Sin Avatar</p>
+                        <p class="text-xl font-bold text-gray-900">{{ $profileStats['users_without_avatar'] }}</p>
+                        <p class="text-xs text-gray-600 mt-1">Pendientes</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Perfiles -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-200"
+                 x-data="{ 
+                     profileSearch: '',
+                     profileFilter: 'all',
+                     teamProfiles: @js($allTeamMembers->map(function($user) {
+                         return [
+                             'id' => $user->id,
+                             'name' => $user->name,
+                             'email' => $user->email,
+                             'avatar_url' => $user->avatar_url,
+                             'completion' => $user->profile_completion_percent ?? 0,
+                             'competencies' => $user->competencies->count(),
+                             'certifications' => $user->userCertifications->count(),
+                             'has_avatar' => !is_null($user->avatar_url),
+                             'internal_role' => $user->internalRole ? $user->internalRole->name : 'Sin rol',
+                             'manager' => $user->manager ? $user->manager->name : null,
+                         ];
+                     })->values()->all()),
+                     filterProfiles(users) {
+                         let filtered = users;
+                         
+                         if (this.profileSearch) {
+                             const search = this.profileSearch.toLowerCase();
+                             filtered = filtered.filter(u => 
+                                 u.name.toLowerCase().includes(search) || 
+                                 u.email.toLowerCase().includes(search)
+                             );
+                         }
+                         
+                         if (this.profileFilter === 'complete') {
+                             filtered = filtered.filter(u => u.completion >= 100);
+                         } else if (this.profileFilter === 'incomplete') {
+                             filtered = filtered.filter(u => u.completion < 100);
+                         } else if (this.profileFilter === 'low') {
+                             filtered = filtered.filter(u => u.completion < 50);
+                         }
+                         
+                         return filtered;
+                     }
+                 }">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center text-white">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-gray-900">Perfiles del Equipo</h2>
+                            <p class="text-xs text-gray-500">Gestiona y completa los perfiles de tu equipo</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="text" 
+                               x-model="profileSearch" 
+                               placeholder="Buscar por nombre..." 
+                               class="text-xs border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <select x-model="profileFilter" 
+                                class="text-xs border border-gray-300 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="all">Todos</option>
+                            <option value="complete">Completos</option>
+                            <option value="incomplete">Incompletos</option>
+                            <option value="low">Baja completitud</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <template x-for="user in filterProfiles(teamProfiles)" :key="user.id">
+                        <div class="bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 p-4 hover:border-indigo-300 hover:shadow-lg transition-all"
+                             :class="{
+                                 'border-green-200': user.completion >= 100,
+                                 'border-yellow-200': user.completion >= 50 && user.completion < 100,
+                                 'border-red-200': user.completion < 50
+                             }">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="relative">
+                                        <template x-if="user.avatar_url">
+                                            <img :src="user.avatar_url" 
+                                                 :alt="user.name" 
+                                                 class="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md">
+                                        </template>
+                                        <template x-if="!user.avatar_url">
+                                            <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold border-2 border-white shadow-md">
+                                                <span x-text="user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()"></span>
+                                            </div>
+                                        </template>
+                                        <div class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center"
+                                             :class="{
+                                                 'bg-green-500': user.completion >= 100,
+                                                 'bg-yellow-500': user.completion >= 50 && user.completion < 100,
+                                                 'bg-red-500': user.completion < 50
+                                             }">
+                                            <span class="text-[10px] font-bold text-white" x-text="user.completion + '%'"></span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-gray-900 text-sm" x-text="user.name"></h3>
+                                        <p class="text-xs text-gray-500" x-text="user.email"></p>
+                                        <p class="text-[11px] text-gray-600 mt-0.5" x-text="user.internal_role"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs font-medium text-gray-600">Completitud</span>
+                                    <span class="text-xs font-bold" 
+                                          :class="{
+                                              'text-green-600': user.completion >= 100,
+                                              'text-yellow-600': user.completion >= 50 && user.completion < 100,
+                                              'text-red-600': user.completion < 50
+                                          }"
+                                          x-text="user.completion + '%'"></span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="h-2 rounded-full transition-all"
+                                         :class="{
+                                             'bg-green-500': user.completion >= 100,
+                                             'bg-yellow-500': user.completion >= 50 && user.completion < 100,
+                                             'bg-red-500': user.completion < 50
+                                         }"
+                                         :style="'width: ' + user.completion + '%'"></div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-2 mb-3">
+                                <div class="text-center p-2 bg-purple-50 rounded-lg">
+                                    <p class="text-lg font-bold text-purple-900" x-text="user.competencies"></p>
+                                    <p class="text-[10px] text-purple-700 font-medium">Competencias</p>
+                                </div>
+                                <div class="text-center p-2 bg-amber-50 rounded-lg">
+                                    <p class="text-lg font-bold text-amber-900" x-text="user.certifications"></p>
+                                    <p class="text-[10px] text-amber-700 font-medium">Certificaciones</p>
+                                </div>
+                                <div class="text-center p-2 rounded-lg"
+                                     :class="user.has_avatar ? 'bg-green-50' : 'bg-gray-50'">
+                                    <p class="text-lg font-bold"
+                                       :class="user.has_avatar ? 'text-green-900' : 'text-gray-400'"
+                                       x-text="user.has_avatar ? '✓' : '✗'"></p>
+                                    <p class="text-[10px] font-medium"
+                                       :class="user.has_avatar ? 'text-green-700' : 'text-gray-500'">Avatar</p>
+                                </div>
+                            </div>
+
+                            <a :href="'/profile/' + user.id" 
+                               class="block w-full text-center px-3 py-2 text-xs font-semibold bg-gradient-to-r from-indigo-600 to-purple-500 text-white rounded-lg hover:from-indigo-700 hover:to-purple-600 transition-all">
+                                Ver/Editar Perfil
+                            </a>
+                        </div>
+                    </template>
+                </div>
+
+                <div x-show="filterProfiles(teamProfiles).length === 0" class="text-center py-10 text-gray-500 text-sm">
+                    No se encontraron perfiles que coincidan con los filtros.
+                </div>
+            </div>
+        @else
+            <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-200 text-center py-10 text-gray-500 text-sm">
+                No tienes miembros en tu equipo todavía.
+            </div>
         @endif
     </div>
 </div>

@@ -167,6 +167,22 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Evaluaciones recibidas por el usuario
+     */
+    public function evaluations(): HasMany
+    {
+        return $this->hasMany(UserEvaluation::class);
+    }
+
+    /**
+     * Evaluaciones realizadas por el usuario (como evaluador)
+     */
+    public function evaluationsAsEvaluator(): HasMany
+    {
+        return $this->hasMany(UserEvaluation::class, 'evaluator_id');
+    }
+
+    /**
      * Obtener el total de puntos de gamificación del usuario
      */
     public function getTotalCertificationPointsAttribute(): int
