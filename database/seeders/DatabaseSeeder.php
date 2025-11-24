@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             CertificationSeeder::class,
             InfrastructureAttributeSeeder::class,
             CertificationAttributeSeeder::class,
+            ToolingAttributeSeeder::class,
         ]);
 
         // Usuarios de prueba conectados a roles y áreas
