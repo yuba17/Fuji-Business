@@ -38,7 +38,8 @@ class DecisionController extends Controller
         $this->authorize('create', Decision::class);
         
         $plans = Plan::where('status', '!=', 'archived')->get();
-        $users = User::all();
+        // Optimización: Solo seleccionar campos necesarios y ordenar por nombre
+        $users = User::select('id', 'name')->orderBy('name')->get();
         $planId = $request->get('plan_id');
         
         return view('decisions.create', compact('plans', 'users', 'planId'));
@@ -92,7 +93,8 @@ class DecisionController extends Controller
         $this->authorize('update', $decision);
         
         $plans = Plan::where('status', '!=', 'archived')->get();
-        $users = User::all();
+        // Optimización: Solo seleccionar campos necesarios y ordenar por nombre
+        $users = User::select('id', 'name')->orderBy('name')->get();
         
         return view('decisions.edit', compact('decision', 'plans', 'users'));
     }

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class ServiceLine extends Model
@@ -50,5 +51,13 @@ class ServiceLine extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class);
+    }
+
+    /**
+     * Planes de certificación para esta línea de servicio
+     */
+    public function certificationPlans(): HasMany
+    {
+        return $this->hasMany(CertificationPlan::class);
     }
 }

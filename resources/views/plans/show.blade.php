@@ -970,7 +970,7 @@
                     <div>
                         <h2 class="text-2xl font-bold text-gray-800">Certificaciones</h2>
                         <p class="text-xs text-gray-500">
-                            Gestión de certificaciones, roadmap personalizado y gamificación.
+                            Gestión de certificaciones, planes por rol y roadmap personalizado.
                         </p>
                     </div>
                 </div>
@@ -978,6 +978,18 @@
             @livewire('plans.plan-desarrollo-certificaciones', ['plan' => $plan], key('certifications-' . $plan->id))
         </div>
     </div>
+    @endif
+    
+    @if($isInternalPlan && $activeTab === 'certifications')
+    @once
+        @push('styles')
+            @include('livewire.plans.partials.certification-styles')
+        @endpush
+        
+        @push('scripts')
+            @include('livewire.plans.partials.certification-scripts')
+        @endpush
+    @endonce
     @endif
 
     @if($isInternalPlan && $activeTab === 'innovation-tooling')

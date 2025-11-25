@@ -7,6 +7,7 @@ use App\Models\Plan;
 use App\Models\Area;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class TaskKanban extends Component
 {
@@ -14,6 +15,9 @@ class TaskKanban extends Component
     public $areaId = null;
     public $selectedPlan = null;
     public $selectedArea = null;
+    // Optimización: Cachear planes y áreas para evitar recargar en cada render
+    protected $plans = null;
+    protected $areas = null;
     
     public $columns = [
         'todo' => ['label' => 'Por Hacer', 'color' => 'gray'],
@@ -36,6 +40,10 @@ class TaskKanban extends Component
         if ($areaId) {
             $this->selectedArea = Area::find($areaId);
         }
+        
+        // Optimización: Cargar planes y áreas una sola vez al montar
+        $this->plans = Plan::where('status', '!=', 'archived')->select('id', 'name')->orderBy('name')->get();
+        $this->areas = Area::where('is_active', true)->select('id', 'name')->orderBy('name')->get();
     }
 
     public function updateTaskStatus($taskId, $newStatus, $newOrder = null)
@@ -121,21 +129,30 @@ class TaskKanban extends Component
     {
         $user = Auth::user();
         
-        $query = Task::with(['plan', 'area', 'assignedUser', 'milestone', 'subtasks'])
+        // Optimización: No cargar subtasks por defecto (solo si se necesitan)
+        $query = Task::with(['plan', 'area', 'assignedUser', 'milestone'])
             ->whereNull('parent_task_id') // Solo mostrar tareas principales, no subtareas
             ->orderBy('order', 'asc')
             ->orderBy('created_at', 'asc');
         
         // Filtrar según rol
         if ($user->isManager()) {
-            $query->where(function($q) use ($user) {
+            // Optimización: Usar pluck directo en lugar de cargar relación completa
+            $userAreaIds = $user->areas()->pluck('areas.id')->toArray();
+            
+            $query->where(function($q) use ($user, $userAreaIds) {
                 $q->where('assigned_to', $user->id)
-                  ->orWhere('created_by', $user->id)
-                  ->orWhereIn('area_id', $user->areas->pluck('id'))
-                  ->orWhereHas('plan', function($planQ) use ($user) {
-                      $planQ->where('manager_id', $user->id)
-                            ->orWhere('director_id', $user->id);
-                  });
+                  ->orWhere('created_by', $user->id);
+                  
+                if (!empty($userAreaIds)) {
+                    $q->orWhereIn('area_id', $userAreaIds);
+                }
+                
+                // Revertir a whereHas: puede ser más rápido con índices adecuados y Eloquent lo optimiza
+                $q->orWhereHas('plan', function($planQ) use ($user) {
+                    $planQ->where('manager_id', $user->id)
+                          ->orWhere('director_id', $user->id);
+                });
             });
         } elseif ($user->isTecnico()) {
             $query->where(function($q) use ($user) {
@@ -166,10 +183,11 @@ class TaskKanban extends Component
 
     public function render()
     {
+        // Optimización: Usar planes y áreas cacheados en mount
         return view('livewire.tasks.task-kanban', [
             'tasks' => $this->tasks,
-            'plans' => Plan::where('status', '!=', 'archived')->get(),
-            'areas' => Area::where('is_active', true)->get(),
+            'plans' => $this->plans,
+            'areas' => $this->areas,
         ]);
     }
 }

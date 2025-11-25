@@ -25,10 +25,7 @@ class KpiCalculationService
     {
         $percentage = $this->calculatePercentage($kpi);
         
-        if ($percentage === null) {
-            return;
-        }
-        
+        // Optimización: Eliminado check innecesario (calculatePercentage siempre devuelve float)
         $green = $kpi->threshold_green ?? 80;
         $yellow = $kpi->threshold_yellow ?? 60;
 

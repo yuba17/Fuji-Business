@@ -167,6 +167,23 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Planes de certificación asignados al usuario
+     */
+    public function certificationPlans(): HasMany
+    {
+        return $this->hasMany(UserCertificationPlan::class);
+    }
+
+    /**
+     * Planes de certificación activos del usuario
+     */
+    public function activeCertificationPlans(): HasMany
+    {
+        return $this->hasMany(UserCertificationPlan::class)
+            ->whereIn('status', ['pending', 'in_progress']);
+    }
+
+    /**
      * Evaluaciones recibidas por el usuario
      */
     public function evaluations(): HasMany
@@ -180,24 +197,6 @@ class User extends Authenticatable implements FilamentUser
     public function evaluationsAsEvaluator(): HasMany
     {
         return $this->hasMany(UserEvaluation::class, 'evaluator_id');
-    }
-
-    /**
-     * Obtener el total de puntos de gamificación del usuario
-     */
-    public function getTotalCertificationPointsAttribute(): int
-    {
-        $badgePoints = $this->certificationBadges()->sum('points');
-        
-        $certificationPoints = $this->userCertifications()
-            ->where('status', 'active')
-            ->with('certification')
-            ->get()
-            ->sum(function($uc) {
-                return $uc->certification->points_reward ?? 0;
-            });
-        
-        return $badgePoints + $certificationPoints;
     }
 
     /**

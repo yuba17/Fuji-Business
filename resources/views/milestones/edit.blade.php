@@ -110,7 +110,7 @@
                     label="Responsable" 
                     name="responsible_id">
                     <option value="">-- Sin responsable --</option>
-                    @foreach(\App\Models\User::all() as $user)
+                    @foreach($users as $user)
                         <option value="{{ $user->id }}" {{ old('responsible_id', $milestone->responsible_id) == $user->id ? 'selected' : '' }}>
                             {{ $user->name }}
                         </option>

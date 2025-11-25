@@ -11,6 +11,8 @@ class UserCertification extends Model
     protected $fillable = [
         'user_id',
         'certification_id',
+        'certification_plan_id',
+        'assigned_from_plan_at',
         'obtained_at',
         'expires_at',
         'certificate_number',
@@ -23,6 +25,7 @@ class UserCertification extends Model
     ];
 
     protected $casts = [
+        'assigned_from_plan_at' => 'datetime',
         'obtained_at' => 'date',
         'expires_at' => 'date',
         'planned_date' => 'date',
@@ -43,6 +46,14 @@ class UserCertification extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Plan de certificaciones del que proviene esta certificación
+     */
+    public function certificationPlan(): BelongsTo
+    {
+        return $this->belongsTo(CertificationPlan::class);
     }
 
     public function getIsExpiredAttribute(): bool

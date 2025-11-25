@@ -68,4 +68,12 @@ class InternalRole extends Model
     {
         return $this->hasMany(Competency::class);
     }
+
+    /**
+     * Planes de certificación para este rol interno
+     */
+    public function certificationPlans(): HasMany
+    {
+        return $this->hasMany(CertificationPlan::class);
+    }
 }

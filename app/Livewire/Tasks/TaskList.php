@@ -9,6 +9,7 @@ use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class TaskList extends Component
 {
@@ -97,14 +98,22 @@ class TaskList extends Component
         
         // Filtrar según rol
         if ($user->isManager()) {
-            $query->where(function($q) use ($user) {
+            // Optimización: Usar pluck directo en lugar de cargar relación completa
+            $userAreaIds = $user->areas()->pluck('areas.id')->toArray();
+            
+            $query->where(function($q) use ($user, $userAreaIds) {
                 $q->where('assigned_to', $user->id)
-                  ->orWhere('created_by', $user->id)
-                  ->orWhereIn('area_id', $user->areas->pluck('id'))
-                  ->orWhereHas('plan', function($planQ) use ($user) {
-                      $planQ->where('manager_id', $user->id)
-                            ->orWhere('director_id', $user->id);
-                  });
+                  ->orWhere('created_by', $user->id);
+                  
+                if (!empty($userAreaIds)) {
+                    $q->orWhereIn('area_id', $userAreaIds);
+                }
+                
+                // Revertir a whereHas: puede ser más rápido con índices adecuados y Eloquent lo optimiza
+                $q->orWhereHas('plan', function($planQ) use ($user) {
+                    $planQ->where('manager_id', $user->id)
+                          ->orWhere('director_id', $user->id);
+                });
             });
         } elseif ($user->isTecnico()) {
             $query->where(function($q) use ($user) {
@@ -148,10 +157,20 @@ class TaskList extends Component
         
         $tasks = $query->paginate(15);
         
-        // Datos para los filtros
-        $plans = Plan::whereHas('tasks')->orderBy('name')->get();
-        $areas = Area::whereHas('tasks')->orderBy('name')->get();
-        $users = User::whereHas('assignedTasks')->orderBy('name')->get();
+        // Optimización: Solo seleccionar campos necesarios para filtros
+        // Nota: whereHas es necesario aquí para mostrar solo planes/áreas/usuarios con tareas
+        $plans = Plan::whereHas('tasks')
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+        $areas = Area::whereHas('tasks')
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+        $users = User::whereHas('assignedTasks')
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
         
         return view('livewire.tasks.task-list', [
             'tasks' => $tasks,

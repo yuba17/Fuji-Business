@@ -8,6 +8,7 @@ use App\Models\Area;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PlanList extends Component
 {
@@ -55,13 +56,20 @@ class PlanList extends Component
         
         // Filtrar según rol
         if ($user->isManager()) {
-            $query->where(function($q) use ($user) {
+            // Optimización: Usar pluck directo en lugar de cargar relación completa
+            $userAreaIds = $user->areas()->pluck('areas.id')->toArray();
+            
+            $query->where(function($q) use ($user, $userAreaIds) {
                 $q->where('manager_id', $user->id)
-                  ->orWhere('director_id', $user->id)
-                  ->orWhereIn('area_id', $user->areas->pluck('id'));
+                  ->orWhere('director_id', $user->id);
+                  
+                if (!empty($userAreaIds)) {
+                    $q->orWhereIn('area_id', $userAreaIds);
+                }
             });
         } elseif ($user->isTecnico()) {
             // Los técnicos solo ven planes donde están asignados a tareas
+            // Revertir a whereHas: puede ser más rápido con índices adecuados
             $query->whereHas('tasks', function($taskQ) use ($user) {
                 $taskQ->where('assigned_to', $user->id);
             });

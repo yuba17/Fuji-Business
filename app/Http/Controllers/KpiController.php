@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 
 class KpiController extends Controller
 {
@@ -26,13 +27,21 @@ class KpiController extends Controller
         
         // Filtrar según rol
         if ($user->isManager()) {
-            $query->where(function($q) use ($user) {
-                $q->where('responsible_id', $user->id)
-                  ->orWhereIn('area_id', $user->areas->pluck('id'))
-                  ->orWhereHas('plan', function($planQ) use ($user) {
-                      $planQ->where('manager_id', $user->id)
-                            ->orWhere('director_id', $user->id);
-                  });
+            // Optimización: Usar pluck directo en lugar de cargar relación completa
+            $userAreaIds = $user->areas()->pluck('areas.id')->toArray();
+            
+            $query->where(function($q) use ($user, $userAreaIds) {
+                $q->where('responsible_id', $user->id);
+                
+                if (!empty($userAreaIds)) {
+                    $q->orWhereIn('area_id', $userAreaIds);
+                }
+                
+                // Revertir a whereHas: puede ser más rápido con índices adecuados y Eloquent lo optimiza
+                $q->orWhereHas('plan', function($planQ) use ($user) {
+                    $planQ->where('manager_id', $user->id)
+                          ->orWhere('director_id', $user->id);
+                });
             });
         } elseif ($user->isTecnico()) {
             $query->where('responsible_id', $user->id);
@@ -64,7 +73,8 @@ class KpiController extends Controller
         
         $plans = Plan::where('status', '!=', 'archived')->get();
         $areas = Area::where('is_active', true)->get();
-        $users = User::all();
+        // Optimización: Solo seleccionar campos necesarios y ordenar por nombre
+        $users = User::select('id', 'name')->orderBy('name')->get();
         $planId = $request->get('plan_id');
         
         return view('kpis.create', compact('plans', 'areas', 'users', 'planId'));
@@ -127,7 +137,8 @@ class KpiController extends Controller
         
         $plans = Plan::where('status', '!=', 'archived')->get();
         $areas = Area::where('is_active', true)->get();
-        $users = User::all();
+        // Optimización: Solo seleccionar campos necesarios y ordenar por nombre
+        $users = User::select('id', 'name')->orderBy('name')->get();
         
         return view('kpis.edit', compact('kpi', 'plans', 'areas', 'users'));
     }

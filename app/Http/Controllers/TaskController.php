@@ -37,7 +37,8 @@ class TaskController extends Controller
         $user = auth()->user();
         $plans = Plan::where('status', '!=', 'archived')->get();
         $areas = Area::where('is_active', true)->get();
-        $users = User::all();
+        // Optimización: Solo seleccionar campos necesarios y ordenar por nombre
+        $users = User::select('id', 'name')->orderBy('name')->get();
         $planId = $request->get('plan_id');
         
         return view('tasks.create', compact('plans', 'areas', 'users', 'planId'));
@@ -93,7 +94,8 @@ class TaskController extends Controller
             'comments.replies.user'
         ]);
         
-        $users = User::all(); // Para el autocompletado de menciones
+        // Optimización: Solo seleccionar campos necesarios para autocompletado de menciones
+        $users = User::select('id', 'name')->orderBy('name')->get();
         
         return view('tasks.show', compact('task', 'users'));
     }
@@ -107,7 +109,8 @@ class TaskController extends Controller
         
         $plans = Plan::where('status', '!=', 'archived')->get();
         $areas = Area::where('is_active', true)->get();
-        $users = User::all();
+        // Optimización: Solo seleccionar campos necesarios y ordenar por nombre
+        $users = User::select('id', 'name')->orderBy('name')->get();
         
         return view('tasks.edit', compact('task', 'plans', 'areas', 'users'));
     }

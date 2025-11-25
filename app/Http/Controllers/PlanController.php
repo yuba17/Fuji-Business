@@ -91,11 +91,12 @@ class PlanController extends Controller
             'risks',
         ]);
 
+        // Optimización: Usar métodos del modelo cuando estén disponibles, con fallback seguro
         $isInternalPlan = $plan->planType
-            ? Str::contains(Str::lower($plan->planType->name ?? ''), 'desarrollo interno')
+            ? ($plan->planType->isDesarrolloInterno() || Str::contains(Str::lower($plan->planType->name ?? ''), 'desarrollo interno'))
             : false;
         $isCommercialPlan = $plan->planType
-            ? Str::contains(Str::lower($plan->planType->name ?? ''), 'comercial')
+            ? ($plan->planType->isComercial() || Str::contains(Str::lower($plan->planType->name ?? ''), 'comercial'))
             : false;
 
         $availableTabs = ['summary'];

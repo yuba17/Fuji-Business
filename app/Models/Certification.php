@@ -27,9 +27,6 @@ class Certification extends Model
         'is_internal',
         'requirements',
         'exam_details',
-        'badge_icon',
-        'badge_color',
-        'points_reward',
         'order',
         'is_active',
     ];
@@ -41,7 +38,6 @@ class Certification extends Model
         'value_score' => 'integer',
         'is_critical' => 'boolean',
         'is_internal' => 'boolean',
-        'points_reward' => 'integer',
         'order' => 'integer',
         'is_active' => 'boolean',
     ];
@@ -54,6 +50,16 @@ class Certification extends Model
     public function badges(): HasMany
     {
         return $this->hasMany(CertificationBadge::class);
+    }
+
+    /**
+     * Planes de certificación que incluyen esta certificación
+     */
+    public function certificationPlans(): BelongsToMany
+    {
+        return $this->belongsToMany(CertificationPlan::class, 'certification_plan_certifications')
+            ->withPivot(['priority', 'order', 'target_months', 'target_date', 'is_flexible'])
+            ->withTimestamps();
     }
 
     public function users(): BelongsToMany

@@ -41,7 +41,8 @@ class MilestoneEditor extends Component
     {
         $this->plan = is_object($plan) ? $plan : Plan::findOrFail($plan);
         $this->planId = $this->plan->id;
-        $this->users = User::all();
+        // Optimización: Solo seleccionar campos necesarios y ordenar por nombre
+        $this->users = User::select('id', 'name')->orderBy('name')->get();
         $this->availableMilestones = $this->plan->milestones()->orderBy('name')->get();
 
         if ($milestone) {

@@ -99,12 +99,6 @@ class CertificationForm
                     ->columnSpanFull(),
                 Textarea::make('exam_details')
                     ->columnSpanFull(),
-                TextInput::make('badge_icon'),
-                TextInput::make('badge_color'),
-                TextInput::make('points_reward')
-                    ->required()
-                    ->numeric()
-                    ->default(0),
                 TextInput::make('order')
                     ->required()
                     ->numeric()

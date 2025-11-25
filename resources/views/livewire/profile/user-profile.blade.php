@@ -394,20 +394,17 @@
                     {{-- Mostrar certificación actual al editar --}}
                     <div class="p-4 bg-gray-50 border-2 border-gray-200 rounded-lg">
                         <p class="text-xs font-medium text-gray-500 mb-2">Certificación (no se puede cambiar al editar)</p>
-                        @php
-                            $currentCert = \App\Models\Certification::find($userCertificationCertificationId);
-                        @endphp
-                        @if($currentCert)
+                        @if($currentCertification)
                             <div class="flex items-center gap-3">
-                                @if($currentCert->image_url)
-                                    <img src="{{ $currentCert->image_url }}" 
-                                         alt="{{ $currentCert->name }}" 
+                                @if($currentCertification->image_url ?? null)
+                                    <img src="{{ $currentCertification->image_url }}" 
+                                         alt="{{ $currentCertification->name }}" 
                                          class="w-12 h-12 object-contain rounded border border-gray-200 bg-white p-1">
                                 @endif
                                 <div>
-                                    <p class="text-sm font-semibold text-gray-900">{{ $currentCert->name }}</p>
-                                    @if($currentCert->provider)
-                                        <p class="text-xs text-gray-500">{{ $currentCert->provider }}</p>
+                                    <p class="text-sm font-semibold text-gray-900">{{ $currentCertification->name }}</p>
+                                    @if($currentCertification->provider ?? null)
+                                        <p class="text-xs text-gray-500">{{ $currentCertification->provider }}</p>
                                     @endif
                                 </div>
                             </div>

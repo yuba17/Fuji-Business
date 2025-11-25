@@ -30,10 +30,6 @@ class CertificationInfolist
                     ->boolean(),
                 IconEntry::make('is_internal')
                     ->boolean(),
-                TextEntry::make('badge_icon'),
-                TextEntry::make('badge_color'),
-                TextEntry::make('points_reward')
-                    ->numeric(),
                 TextEntry::make('order')
                     ->numeric(),
                 IconEntry::make('is_active')

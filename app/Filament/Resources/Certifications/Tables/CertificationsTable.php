@@ -52,13 +52,6 @@ class CertificationsTable
                     ->boolean(),
                 IconColumn::make('is_internal')
                     ->boolean(),
-                TextColumn::make('badge_icon')
-                    ->searchable(),
-                TextColumn::make('badge_color')
-                    ->searchable(),
-                TextColumn::make('points_reward')
-                    ->numeric()
-                    ->sortable(),
                 TextColumn::make('order')
                     ->numeric()
                     ->sortable(),

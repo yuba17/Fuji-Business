@@ -40,6 +40,7 @@ class UserProfile extends Component
     public $showCertificationModal = false;
     public $userCertificationId = null;
     public $userCertificationCertificationId = null;
+    public $currentCertification = null; // Optimización: Cachear certificación actual
     public $userCertificationObtainedAt = null;
     public $userCertificationExpiresAt = null;
     public $userCertificationCertificateNumber = '';
@@ -186,6 +187,8 @@ class UserProfile extends Component
         if ($userCertificationId) {
             $uc = UserCertification::with('certification')->find($userCertificationId);
             $this->userCertificationCertificationId = $uc->certification_id;
+            // Optimización: Cachear certificación para evitar consulta en la vista
+            $this->currentCertification = $uc->certification;
             $this->userCertificationObtainedAt = $uc->obtained_at?->format('Y-m-d');
             $this->userCertificationExpiresAt = $uc->expires_at?->format('Y-m-d');
             $this->userCertificationCertificateNumber = $uc->certificate_number ?? '';
@@ -210,6 +213,7 @@ class UserProfile extends Component
     {
         $this->userCertificationId = null;
         $this->userCertificationCertificationId = null;
+        $this->currentCertification = null;
         $this->userCertificationObtainedAt = null;
         $this->userCertificationExpiresAt = null;
         $this->userCertificationCertificateNumber = '';

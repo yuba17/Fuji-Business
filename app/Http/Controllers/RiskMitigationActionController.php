@@ -17,7 +17,8 @@ class RiskMitigationActionController extends Controller
     {
         $this->authorize('update', $risk);
         
-        $users = \App\Models\User::all();
+        // Optimización: Solo seleccionar campos necesarios y ordenar por nombre
+        $users = \App\Models\User::select('id', 'name')->orderBy('name')->get();
         
         return view('risks.mitigation-actions.create', compact('risk', 'users'));
     }
@@ -61,7 +62,8 @@ class RiskMitigationActionController extends Controller
             abort(404);
         }
         
-        $users = \App\Models\User::all();
+        // Optimización: Solo seleccionar campos necesarios y ordenar por nombre
+        $users = \App\Models\User::select('id', 'name')->orderBy('name')->get();
         
         return view('risks.mitigation-actions.edit', compact('risk', 'mitigationAction', 'users'));
     }

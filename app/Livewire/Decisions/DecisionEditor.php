@@ -38,7 +38,8 @@ class DecisionEditor extends Component
     public function mount($decision = null)
     {
         $this->plans = Plan::where('status', '!=', 'archived')->get();
-        $this->users = User::all();
+        // Optimización: Solo seleccionar campos necesarios y ordenar por nombre
+        $this->users = User::select('id', 'name')->orderBy('name')->get();
 
         if ($decision) {
             $this->decisionId = $decision->id;

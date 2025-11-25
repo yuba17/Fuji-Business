@@ -1,19 +1,4 @@
 <div x-data="{ viewMode: 'inventory', selectedUserId: null, filtersOpen: false }" x-cloak>
-    <style>
-        @keyframes fade-in {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .animate-fade-in {
-            animation: fade-in 0.5s ease-out;
-        }
-    </style>
     {{-- Mensaje informativo sobre sincronización --}}
     <div class="mb-4 p-3 bg-indigo-50 border-l-4 border-indigo-400 rounded-r-lg">
         <div class="flex items-start gap-2">
@@ -31,7 +16,7 @@
     <div class="flex items-center justify-between mb-6">
         <div>
             <h3 class="text-lg font-bold text-gray-900">Gestión de Certificaciones</h3>
-            <p class="text-xs text-gray-500">Gestiona certificaciones, roadmap personalizado y gamificación</p>
+            <p class="text-xs text-gray-500">Gestiona certificaciones, planes por rol y roadmap personalizado</p>
         </div>
         <div class="flex items-center gap-3">
             <div class="flex items-center gap-2">
@@ -50,15 +35,10 @@
                         class="px-3 py-2 text-xs font-semibold rounded-lg border border-gray-200 transition-all">
                     Roadmap
                 </button>
-                <button @click="viewMode = 'leaderboard'" 
-                        :class="viewMode === 'leaderboard' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'"
+                <button @click="viewMode = 'plans'" 
+                        :class="viewMode === 'plans' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'"
                         class="px-3 py-2 text-xs font-semibold rounded-lg border border-gray-200 transition-all">
-                    Leaderboard
-                </button>
-                <button @click="viewMode = 'badges'" 
-                        :class="viewMode === 'badges' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'"
-                        class="px-3 py-2 text-xs font-semibold rounded-lg border border-gray-200 transition-all">
-                    Badges
+                    Planes
                 </button>
             </div>
             <button wire:click="openCertificationModal()" 
@@ -436,26 +416,33 @@
         @endif
 
         {{-- Modal: Detalles de Certificación en Matriz --}}
-        @if($showMatrixDetailModal && $selectedMatrixCertification)
+        <div x-show="@entangle('showMatrixDetailModal')" 
+             x-cloak
+             class="fixed inset-0 z-50 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             style="display: none;">
             @php
-                $certDetail = $matrixData->firstWhere('certification.id', $selectedMatrixCertification);
+                $certDetail = $selectedMatrixCertification ? $matrixData->firstWhere('certification.id', $selectedMatrixCertification) : null;
             @endphp
-            @if($certDetail)
-                <div class="fixed inset-0 z-50 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4" 
-                     x-show="true"
-                     x-transition:enter="transition ease-out duration-300"
-                     x-transition:enter-start="opacity-0"
-                     x-transition:enter-end="opacity-100">
-                    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-                         x-show="true"
-                         x-transition:enter="transition ease-out duration-300"
-                         x-transition:enter-start="opacity-0 scale-95"
-                         x-transition:enter-end="opacity-100 scale-100"
-                         @click.away="window.livewire.find('{{ $this->getId() }}').call('closeMatrixDetailModal')">
+            <div x-show="@entangle('showMatrixDetailModal') && @js($certDetail !== null)"
+                 class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95"
+                 @click.away="window.livewire.find('{{ $this->getId() }}').call('closeMatrixDetailModal')">
+                        @if($certDetail)
                         {{-- Header --}}
                         <div class="bg-gradient-to-r from-red-600 to-orange-600 px-6 py-4 flex items-center justify-between rounded-t-2xl sticky top-0 z-10">
                             <div class="flex-1">
-                                <h3 class="text-xl font-bold text-white mb-1">{{ $certDetail['certification']->name }}</h3>
+                                <h3 class="text-xl font-bold text-white mb-1">{{ $certDetail['certification']?->name ?? 'Certificación' }}</h3>
                                 <div class="flex items-center gap-2 flex-wrap">
                                     <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-xs font-semibold rounded-full">
                                         {{ $attributeOptions['provider'][$certDetail['certification']->provider] ?? $certDetail['certification']->provider }}
@@ -747,9 +734,9 @@
                             </button>
                         </div>
                     </div>
+                        @endif
                 </div>
-            @endif
-        @endif
+        </div>
     </div>
 
     {{-- Vista: Roadmap Personalizado con Timeline Visual Interactivo --}}
@@ -776,16 +763,42 @@
                 </div>
                 @if($selectedUserId)
                     <div class="flex items-center gap-2">
-                        <button wire:click="openUserCertificationModal({{ $selectedUserId }})" 
+                        <button wire:click="openUserCertificationModal({{ $selectedUserId }}, null, null)" 
+                                type="button"
                                 class="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-purple-600 to-indigo-500 text-white rounded-lg hover:from-purple-700 hover:to-indigo-600 transition-all flex items-center gap-2 shadow-lg hover:shadow-xl">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                             </svg>
-                            Añadir Certificación
+                            Añadir Certificación Individual
                         </button>
                     </div>
                 @endif
             </div>
+            
+            {{-- Información de planes asignados --}}
+            @if($selectedUserId && isset($selectedUserPlans) && $selectedUserPlans->count() > 0)
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <p class="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">Planes de Certificación Asignados</p>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($selectedUserPlans as $userPlan)
+                            <div class="px-3 py-2 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-bold text-blue-900">{{ $userPlan->plan->name }}</span>
+                                    <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full
+                                        @if($userPlan->status === 'in_progress') bg-blue-100 text-blue-800
+                                        @else bg-gray-100 text-gray-800
+                                        @endif">
+                                        {{ ucfirst($userPlan->status) }}
+                                    </span>
+                                    @if($userPlan->progress_percentage > 0)
+                                        <span class="text-[10px] font-semibold text-gray-600">{{ number_format($userPlan->progress_percentage, 0) }}%</span>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
         </div>
 
         @if($selectedUserId && $roadmapTimeline && $roadmapTimeline->count() > 0)
@@ -831,7 +844,6 @@
                                             this.expanded = !this.expanded;
                                         }
                                     }"
-                                    x-intersect="$el.classList.add('animate-fade-in')">
                                     {{-- Punto del timeline --}}
                                     <span class="absolute flex items-center justify-center w-8 h-8 
                                         @if($item['status'] === 'active') bg-gradient-to-br from-green-500 to-emerald-600
@@ -931,8 +943,20 @@
                                                                             Planificada
                                                                         @endif
                                                                     </span>
+                                                                    @if(isset($item['is_from_plan']) && $item['is_from_plan'])
+                                                                        <span class="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs font-bold rounded-full shadow-sm flex items-center gap-1">
+                                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                                            </svg>
+                                                                            Del Plan
+                                                                        </span>
+                                                                    @else
+                                                                        <span class="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-bold rounded-full border border-gray-300">
+                                                                            Individual
+                                                                        </span>
+                                                                    @endif
                                                                     @if($item['is_critical'])
-                                                                        <span class="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-xs font-bold rounded-full shadow-sm">Crítica</span>
+                                                                        <span class="px-3 py-1.5 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold rounded-full shadow-sm">Crítica</span>
                                                                     @endif
                                                                 </div>
                                                             </div>
@@ -977,6 +1001,43 @@
                                                                     </p>
                                                                 </div>
                                                             </div>
+                                                            
+                                                            @if(isset($item['is_from_plan']) && $item['is_from_plan'] && isset($item['plan_name']))
+                                                                <div class="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
+                                                                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center shadow-sm">
+                                                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                                        </svg>
+                                                                    </div>
+                                                                    <div class="flex-1 min-w-0">
+                                                                        <p class="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Plan de Certificación</p>
+                                                                        <p class="text-sm font-bold text-purple-700">
+                                                                            {{ $item['plan_name'] }}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                        
+                                                        {{-- Botones de acción --}}
+                                                        <div class="flex items-center justify-end gap-2 mt-4 pt-4 border-t border-gray-200">
+                                                            @if($item['user_certification_id'])
+                                                                <button wire:click="openUserCertificationModal({{ $selectedUserId }}, {{ $item['user_certification_id'] }})" 
+                                                                        class="px-4 py-2 text-xs font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all flex items-center gap-2">
+                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                                                    </svg>
+                                                                    Editar
+                                                                </button>
+                                                            @else
+                                                                <button wire:click="openUserCertificationModal({{ $selectedUserId }}, null, {{ $item['certification']->id }})" 
+                                                                        class="px-4 py-2 text-xs font-semibold bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all flex items-center gap-2">
+                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                                                    </svg>
+                                                                    Crear Certificación
+                                                                </button>
+                                                            @endif
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1019,7 +1080,8 @@
              x-transition:leave-end="opacity-0"
              class="fixed inset-0 z-50 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4"
              @click.self="closeModal()"
-             style="display: none;">
+             style="display: none;"
+             x-cloak>
             <div x-show="selectedItem"
                  x-transition:enter="transition ease-out duration-300"
                  x-transition:enter-start="opacity-0 scale-95"
@@ -1029,8 +1091,6 @@
                  x-transition:leave-end="opacity-0 scale-95"
                  class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
                  @click.stop>
-                <template x-if="selectedItem">
-                    <div>
                         {{-- Header del modal --}}
                         <div class="sticky top-0 z-10 rounded-t-2xl p-6"
                              :class="{
@@ -1046,9 +1106,8 @@
                                             selectedItem?.status === 'active' ? '✅ Activa' :
                                             selectedItem?.status === 'in_progress' ? '⏳ En Progreso' : '📅 Planificada'
                                         "></span>
-                                        <template x-if="selectedItem?.is_critical">
-                                            <span class="px-3 py-1 bg-blue-600/80 backdrop-blur-sm text-white text-sm font-bold rounded-full">🔴 Crítica</span>
-                                        </template>
+                                        <span x-show="selectedItem?.is_critical" 
+                                              class="px-3 py-1 bg-blue-600/80 backdrop-blur-sm text-white text-sm font-bold rounded-full">🔴 Crítica</span>
                                     </div>
                                 </div>
                                 <button @click="closeModal()" class="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-lg transition-colors">
@@ -1061,13 +1120,11 @@
                         
                         {{-- Contenido del modal --}}
                         <div class="p-6 space-y-6">
-                            <template x-if="selectedItem?.image_url">
-                                <div class="flex justify-center">
-                                    <img :src="selectedItem.image_url" 
-                                         :alt="selectedItem.name" 
-                                         class="w-32 h-32 object-contain rounded-xl border-2 border-gray-200 bg-white p-2 shadow-md">
-                                </div>
-                            </template>
+                            <div x-show="selectedItem?.image_url" class="flex justify-center">
+                                <img :src="selectedItem?.image_url" 
+                                     :alt="selectedItem?.name" 
+                                     class="w-32 h-32 object-contain rounded-xl border-2 border-gray-200 bg-white p-2 shadow-md">
+                            </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="p-4 bg-blue-50 rounded-xl border border-blue-200">
                                     <p class="text-xs font-medium text-blue-600 uppercase tracking-wide mb-1">Proveedor</p>
@@ -1079,20 +1136,16 @@
                                     <p class="text-base font-bold text-cyan-600" x-text="selectedItem?.date_formatted || 'Sin fecha'"></p>
                                 </div>
                                 
-                                <template x-if="selectedItem?.priority > 0">
-                                    <div class="p-4 bg-amber-50 rounded-xl border border-amber-200">
-                                        <p class="text-xs font-medium text-amber-600 uppercase tracking-wide mb-1">Prioridad</p>
-                                        <p class="text-base font-bold text-amber-600" x-text="'Nivel ' + selectedItem.priority"></p>
-                                    </div>
-                                </template>
+                                <div x-show="selectedItem?.priority > 0" class="p-4 bg-amber-50 rounded-xl border border-amber-200">
+                                    <p class="text-xs font-medium text-amber-600 uppercase tracking-wide mb-1">Prioridad</p>
+                                    <p class="text-base font-bold text-amber-600" x-text="'Nivel ' + (selectedItem?.priority || 0)"></p>
+                                </div>
                             </div>
                             
-                            <template x-if="selectedItem?.notes">
-                                <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
-                                    <p class="text-xs font-medium text-gray-600 uppercase tracking-wide mb-2">Notas</p>
-                                    <p class="text-sm text-gray-700 whitespace-pre-wrap" x-text="selectedItem.notes"></p>
-                                </div>
-                            </template>
+                            <div x-show="selectedItem?.notes" class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                                <p class="text-xs font-medium text-gray-600 uppercase tracking-wide mb-2">Notas</p>
+                                <p class="text-sm text-gray-700 whitespace-pre-wrap" x-text="selectedItem?.notes || ''"></p>
+                            </div>
                         </div>
                         
                         {{-- Footer del modal --}}
@@ -1107,120 +1160,438 @@
                             </button>
                         </div>
                     </div>
-                </template>
+                </div>
             </div>
         </div>
     </div>
 
-    {{-- Vista: Leaderboard --}}
-    <div x-show="viewMode === 'leaderboard'" x-transition style="display: none;">
-        @if($leaderboard->count() > 0)
-            <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-                <div class="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-yellow-50 to-orange-100">
-                    <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
-                        <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
-                        </svg>
-                        Leaderboard de Certificaciones
-                    </h3>
+    {{-- Vista: Planes de Certificación --}}
+    <div x-show="viewMode === 'plans'" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 transform translate-y-4"
+         x-transition:enter-end="opacity-100 transform translate-y-0"
+         style="display: none;" 
+         x-cloak
+         x-data="{ 
+             planViewMode: 'grouped', // grid, list, grouped
+             expandedGroups: [],
+             toggleGroup(groupKey) {
+                 if (this.expandedGroups.includes(groupKey)) {
+                     this.expandedGroups = this.expandedGroups.filter(key => key !== groupKey);
+                 } else {
+                     this.expandedGroups.push(groupKey);
+                 }
+             },
+             isGroupExpanded(groupKey) {
+                 return this.expandedGroups.includes(groupKey);
+             }
+         }">
+        
+        {{-- Header con acciones y filtros --}}
+        <div class="mb-6 space-y-4">
+            <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                <div class="flex-1">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-white text-2xl shadow-lg">
+                            📋
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
+                                Planes de Certificación
+                            </h3>
+                            <p class="text-sm text-gray-600 mt-0.5">
+                                Define y gestiona planes personalizados por línea de servicio y rol interno
+                                @if(isset($certificationPlans) && $certificationPlans->count() > 0)
+                                    <span class="ml-2 px-2.5 py-0.5 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
+                                        {{ $certificationPlans->count() }} {{ $certificationPlans->count() === 1 ? 'plan' : 'planes' }}
+                                    </span>
+                                @endif
+                            </p>
+                        </div>
+                    </div>
                 </div>
-                <div class="divide-y divide-gray-200">
-                    @foreach($leaderboard as $index => $entry)
-                        <div class="px-4 py-4 hover:bg-gray-50 transition-colors">
-                            <div class="flex items-center gap-4">
-                                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-500 text-white flex items-center justify-center font-bold text-lg">
-                                    @if($index === 0)
-                                        🥇
-                                    @elseif($index === 1)
-                                        🥈
-                                    @elseif($index === 2)
-                                        🥉
-                                    @else
-                                        {{ $index + 1 }}
-                                    @endif
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-2">
-                                        <h4 class="text-sm font-bold text-gray-900">{{ $entry['user']->name }}</h4>
-                                        @if($entry['user']->internalRole)
-                                            <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-medium rounded-full">
-                                                {{ $entry['user']->internalRole->name }}
-                                            </span>
-                                        @endif
+                <button wire:click="openPlanModal()" 
+                        type="button"
+                        class="w-full lg:w-auto px-6 py-3 text-sm font-bold bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-xl hover:from-red-700 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Nuevo Plan
+                </button>
+            </div>
+
+            {{-- Filtros y búsqueda --}}
+            <div class="bg-white rounded-xl shadow-md p-4 border border-gray-200">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {{-- Búsqueda --}}
+                    <div class="lg:col-span-2">
+                        <label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">Buscar</label>
+                        <input type="text" 
+                               wire:model.live.debounce.300ms="planSearch"
+                               placeholder="Buscar por nombre, línea de servicio, rol..."
+                               class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all">
+                    </div>
+
+                    {{-- Filtro por línea de servicio --}}
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">Línea de Servicio</label>
+                        <select wire:model.live="planFilterServiceLine" 
+                                class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all">
+                            <option value="">Todas</option>
+                            @foreach($serviceLines as $serviceLine)
+                                <option value="{{ $serviceLine->id }}">{{ $serviceLine->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Filtro por rol interno --}}
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">Rol Interno</label>
+                        <select wire:model.live="planFilterInternalRole" 
+                                class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all">
+                            <option value="">Todos</option>
+                            @foreach($internalRoles as $role)
+                                <option value="{{ $role->id }}">{{ $role->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                {{-- Filtro de estado y vista --}}
+                <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+                    <div class="flex items-center gap-3">
+                        <label class="text-xs font-semibold text-gray-700 uppercase tracking-wide">Estado:</label>
+                        <div class="flex items-center gap-2">
+                            <button wire:click="$set('planFilterStatus', 'all')"
+                                    :class="$wire.planFilterStatus === 'all' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                                    class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all">
+                                Todos
+                            </button>
+                            <button wire:click="$set('planFilterStatus', 'active')"
+                                    :class="$wire.planFilterStatus === 'active' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                                    class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all">
+                                Activos
+                            </button>
+                            <button wire:click="$set('planFilterStatus', 'inactive')"
+                                    :class="$wire.planFilterStatus === 'inactive' ? 'bg-gray-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                                    class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all">
+                                Inactivos
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs font-semibold text-gray-700 uppercase tracking-wide">Vista:</label>
+                        <button @click="planViewMode = 'grouped'"
+                                :class="planViewMode === 'grouped' ? 'bg-gradient-to-r from-red-600 to-orange-600 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                                class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all transform hover:scale-105"
+                                title="Vista agrupada">
+                            📊 Agrupada
+                        </button>
+                        <button @click="planViewMode = 'grid'"
+                                :class="planViewMode === 'grid' ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                                class="p-2 rounded-lg transition-all transform hover:scale-105"
+                                title="Vista de cuadrícula">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                            </svg>
+                        </button>
+                        <button @click="planViewMode = 'list'"
+                                :class="planViewMode === 'list' ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                                class="p-2 rounded-lg transition-all transform hover:scale-105"
+                                title="Vista de lista">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if(isset($certificationPlans) && $certificationPlans->count() > 0)
+            @php
+                // Agrupar planes por línea de servicio para la vista agrupada
+                $groupedPlans = $certificationPlans->groupBy('service_line_id');
+            @endphp
+
+            {{-- Vista Agrupada por Línea de Servicio (DEFAULT) --}}
+            <div x-show="planViewMode === 'grouped'" 
+                 class="space-y-6"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform translate-y-4"
+                 x-transition:enter-end="opacity-100 transform translate-y-0">
+                @foreach($groupedPlans as $serviceLineId => $plans)
+                    @php
+                        $serviceLine = $plans->first()->serviceLine;
+                    @endphp
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300">
+                        {{-- Header del grupo --}}
+                        <div class="bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-4 cursor-pointer"
+                             @click="toggleGroup('service-{{ $serviceLineId }}')">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center text-white font-bold text-xl">
+                                        {{ strtoupper(substr($serviceLine->name, 0, 1)) }}
                                     </div>
-                                    <div class="flex items-center gap-4 mt-1">
-                                        <span class="text-xs text-gray-600">
-                                            {{ $entry['active_certifications'] }} certificaciones activas
-                                        </span>
-                                        <span class="text-xs text-gray-600">
-                                            {{ $entry['badges'] }} badges
-                                        </span>
+                                    <div>
+                                        <h3 class="text-xl font-bold text-white">{{ $serviceLine->name }}</h3>
+                                        <p class="text-sm text-blue-100 mt-0.5">{{ $plans->count() }} {{ $plans->count() === 1 ? 'plan' : 'planes' }} de certificación</p>
                                     </div>
                                 </div>
-                                <div class="text-right">
-                                    <p class="text-2xl font-bold text-purple-600">{{ $entry['points'] }}</p>
-                                    <p class="text-xs text-gray-500">puntos</p>
+                                <div class="flex items-center gap-4">
+                                    <div class="text-right bg-white/20 rounded-lg px-4 py-2">
+                                        <p class="text-2xl font-bold text-white">{{ $plans->sum(fn($p) => $p->certifications->count()) }}</p>
+                                        <p class="text-xs text-blue-100 uppercase tracking-wide font-semibold">certificaciones</p>
+                                    </div>
+                                    <svg class="w-6 h-6 text-white transition-transform duration-300" 
+                                         :class="isGroupExpanded('service-{{ $serviceLineId }}') ? 'rotate-180' : ''"
+                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                    </svg>
                                 </div>
                             </div>
                         </div>
-                    @endforeach
-                </div>
-            </div>
-        @else
-            <div class="text-center py-12 bg-white rounded-xl shadow-md border border-gray-200">
-                <p class="text-sm text-gray-500">No hay datos para el leaderboard.</p>
-            </div>
-        @endif
-    </div>
 
-    {{-- Vista: Badges --}}
-    <div x-show="viewMode === 'badges'" x-transition style="display: none;">
-        @if($recentBadges->count() > 0)
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                @foreach($recentBadges as $badge)
-                    <div class="bg-white rounded-xl shadow-md p-4 border border-gray-200 hover:shadow-lg transition-shadow">
-                        <div class="flex items-start gap-3">
-                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 text-white flex items-center justify-center text-2xl flex-shrink-0">
-                                {{ $badge->icon ?? '🏆' }}
+                        {{-- Contenido del grupo --}}
+                        <div x-show="isGroupExpanded('service-{{ $serviceLineId }}')" 
+                             x-collapse
+                             class="p-6 bg-gray-50">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                                @foreach($plans as $plan)
+                                    <div wire:click="viewPlanDetail({{ $plan->id }})" 
+                                         class="group bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 border border-gray-200 hover:border-red-300 overflow-hidden cursor-pointer">
+                                        <div class="p-5">
+                                            {{-- Header del plan --}}
+                                            <div class="flex items-start justify-between mb-4">
+                                                <div class="flex-1">
+                                                    <div class="flex items-center gap-2 mb-2">
+                                                        <h4 class="text-base font-bold text-gray-900 group-hover:text-red-700 transition-colors">{{ $plan->name }}</h4>
+                                                        @if($plan->is_active)
+                                                            <span class="relative flex h-2.5 w-2.5">
+                                                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                                                            </span>
+                                                        @endif
+                                                    </div>
+                                                    <span class="inline-block px-2.5 py-1 bg-purple-100 text-purple-800 text-xs font-semibold rounded-full">
+                                                        {{ $plan->internalRole->name }}
+                                                    </span>
+                                                </div>
+                                                <button wire:click.stop="openPlanModal({{ $plan->id }})" 
+                                                        class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-all"
+                                                        title="Editar">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                                    </svg>
+                                                </button>
+                                            </div>
+
+                                            {{-- Estadísticas --}}
+                                            <div class="grid grid-cols-2 gap-3 mb-4">
+                                                <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-3 text-white">
+                                                    <p class="text-[10px] font-bold uppercase tracking-wider opacity-90">Certificaciones</p>
+                                                    <p class="text-2xl font-bold mt-1">{{ $plan->certifications->count() }}</p>
+                                                </div>
+                                                <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-3 text-white">
+                                                    <p class="text-[10px] font-bold uppercase tracking-wider opacity-90">Usuarios</p>
+                                                    <p class="text-2xl font-bold mt-1">{{ $plan->userPlans->count() }}</p>
+                                                </div>
+                                            </div>
+
+                                            {{-- Preview de certificaciones --}}
+                                            @if($plan->certifications->count() > 0)
+                                                <div class="space-y-2">
+                                                    @foreach($plan->certifications->take(2)->sortBy('order') as $planCert)
+                                                        <div class="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
+                                                            <span class="text-xs font-bold text-gray-500">#{{ $planCert->order }}</span>
+                                                            <span class="text-xs font-semibold text-gray-700 flex-1 truncate">{{ $planCert->certification->name }}</span>
+                                                            <span class="px-2 py-0.5 text-[10px] font-bold rounded
+                                                                @if($planCert->priority <= 2) bg-red-100 text-red-800
+                                                                @elseif($planCert->priority == 3) bg-yellow-100 text-yellow-800
+                                                                @else bg-gray-100 text-gray-800
+                                                                @endif">
+                                                                {{ $planCert->priority_label }}
+                                                            </span>
+                                                        </div>
+                                                    @endforeach
+                                                    @if($plan->certifications->count() > 2)
+                                                        <p class="text-xs text-center text-gray-500 font-semibold">+{{ $plan->certifications->count() - 2 }} más</p>
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
-                            <div class="flex-1">
-                                <h4 class="text-sm font-bold text-gray-900">{{ $badge->name }}</h4>
-                                <p class="text-xs text-gray-500 mt-1">{{ $badge->user->name }}</p>
-                                @if($badge->description)
-                                    <p class="text-xs text-gray-600 mt-1">{{ $badge->description }}</p>
-                                @endif
-                                <div class="flex items-center gap-2 mt-2">
-                                    <span class="px-2 py-0.5 bg-purple-100 text-purple-800 text-[10px] font-bold rounded-full">
-                                        +{{ $badge->points }} pts
-                                    </span>
-                                    <span class="text-xs text-gray-500">
-                                        {{ $badge->earned_at->format('d/m/Y') }}
-                                    </span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            {{-- Vista de cuadrícula --}}
+            <div x-show="planViewMode === 'grid'" 
+                 class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100">
+                @foreach($certificationPlans as $plan)
+                    <div wire:click="viewPlanDetail({{ $plan->id }})" 
+                         class="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-red-400 transform hover:-translate-y-2 hover:scale-[1.02] overflow-hidden cursor-pointer">
+                        {{-- Borde superior con gradiente --}}
+                        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500"></div>
+                        
+                        <div class="relative p-6">
+                            {{-- Header con icono --}}
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-center gap-3 flex-1">
+                                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                                        📋
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <h4 class="text-lg font-bold text-gray-900 group-hover:text-red-700 transition-colors">{{ $plan->name }}</h4>
+                                            @if($plan->is_active)
+                                                <span class="relative flex h-3 w-3">
+                                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                                    <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <div class="flex flex-wrap items-center gap-2 mt-2">
+                                            <span class="px-3 py-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-bold rounded-full shadow-md">
+                                                {{ $plan->serviceLine->name }}
+                                            </span>
+                                            <span class="px-3 py-1 bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs font-bold rounded-full shadow-md">
+                                                {{ $plan->internalRole->name }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button wire:click.stop="openPlanModal({{ $plan->id }})" 
+                                        class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                        title="Editar">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            {{-- Estadísticas --}}
+                            <div class="grid grid-cols-2 gap-3 mt-4">
+                                <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white shadow-lg">
+                                    <p class="text-[10px] font-bold uppercase tracking-wider opacity-90">Certificaciones</p>
+                                    <p class="text-3xl font-bold mt-1">{{ $plan->certifications->count() }}</p>
+                                </div>
+                                <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 text-white shadow-lg">
+                                    <p class="text-[10px] font-bold uppercase tracking-wider opacity-90">Usuarios</p>
+                                    <p class="text-3xl font-bold mt-1">{{ $plan->userPlans->count() }}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 @endforeach
             </div>
+
+            {{-- Vista de lista --}}
+            <div x-show="planViewMode === 'list'" 
+                 class="space-y-4"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform translate-x-4"
+                 x-transition:enter-end="opacity-100 transform translate-x-0">
+                @foreach($certificationPlans as $plan)
+                    <div wire:click="viewPlanDetail({{ $plan->id }})" 
+                         class="group relative bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border-l-4 
+                                @if($plan->is_active) border-red-500 @else border-gray-400 @endif
+                                transform hover:-translate-x-1 cursor-pointer">
+                        <div class="p-6">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-6 flex-1">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-white font-bold text-2xl shadow-lg">
+                                            📋
+                                        </div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-3 mb-2">
+                                            <h4 class="text-lg font-bold text-gray-900 group-hover:text-red-700 transition-colors">{{ $plan->name }}</h4>
+                                            @if($plan->is_active)
+                                                <span class="relative flex h-3 w-3">
+                                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                                    <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <span class="px-3 py-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-bold rounded-full shadow-md">
+                                                {{ $plan->serviceLine->name }}
+                                            </span>
+                                            <span class="px-3 py-1 bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs font-bold rounded-full shadow-md">
+                                                {{ $plan->internalRole->name }}
+                                            </span>
+                                            <span class="px-3 py-1 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-bold rounded-full shadow-md">
+                                                {{ $plan->certifications->count() }} certs
+                                            </span>
+                                            <span class="px-3 py-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-bold rounded-full shadow-md">
+                                                {{ $plan->userPlans->count() }} usuarios
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button wire:click.stop="openPlanModal({{ $plan->id }})" 
+                                        class="px-4 py-2 text-sm font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-md ml-4">
+                                    Editar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
         @else
-            <div class="text-center py-12 bg-white rounded-xl shadow-md border border-gray-200">
-                <p class="text-sm text-gray-500">No hay badges recientes.</p>
+            {{-- Estado vacío mejorado --}}
+            <div class="relative overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-2xl shadow-xl border-2 border-dashed border-gray-300">
+                <div class="absolute inset-0 bg-gradient-to-r from-red-500/5 via-orange-500/5 to-yellow-500/5"></div>
+                <div class="relative text-center py-16 px-6">
+                    <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-red-500 to-orange-500 mb-6 shadow-2xl transform hover:scale-110 transition-transform duration-300">
+                        <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent mb-2">
+                        ¡Crea tu primer plan de certificación!
+                    </h3>
+                    <p class="text-sm text-gray-600 mb-1">Define planes personalizados por línea de servicio y rol interno</p>
+                    <p class="text-xs text-gray-500 mb-8">Los planes se asignarán automáticamente a los usuarios correspondientes</p>
+                    <button wire:click="openPlanModal()" 
+                            class="px-8 py-4 text-base font-bold bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-xl hover:from-red-700 hover:to-orange-700 transition-all shadow-2xl hover:shadow-red-500/50 flex items-center gap-3 mx-auto transform hover:scale-105">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Crear Primer Plan
+                    </button>
+                </div>
             </div>
         @endif
     </div>
 
     {{-- Modal: Crear/Editar Certificación --}}
-    @if($showCertificationModal)
-        <div class="fixed inset-0 z-50 bg-gray-900/40 flex items-center justify-center p-4" 
-             x-show="true"
+    <div x-show="@entangle('showCertificationModal')" 
+         x-cloak
+         class="fixed inset-0 z-50 bg-gray-900/40 flex items-center justify-center p-4" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         style="display: none;">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+             x-show="@entangle('showCertificationModal')"
              x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100">
-            <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-                 x-show="true"
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 scale-95"
-                 x-transition:enter-end="opacity-100 scale-100">
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95">
                 <div class="bg-gradient-to-r from-purple-600 to-indigo-500 px-6 py-4 flex items-center justify-between rounded-t-2xl">
                     <h3 class="text-xl font-bold text-white">
                         {{ $certificationId ? 'Editar Certificación' : 'Nueva Certificación' }}
@@ -1351,33 +1722,32 @@
                 </div>
             </div>
         </div>
-    @endif
+    </div>
 
     {{-- Modal: Cropper de Imagen de Certificación --}}
-    @if($showCertificationCropper && $certificationImage)
-        <div x-data="certificationCropperModal()" 
-             x-show="true"
-             x-cloak
+    <div x-show="@entangle('showCertificationCropper')" 
+         x-data="certificationCropperModal()" 
+         x-cloak
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @keydown.escape.window="closeModal()"
+         class="fixed inset-0 z-[100] bg-gray-900/80 backdrop-blur-sm flex items-center justify-center p-4"
+         style="display: none; position: fixed; z-index: 9999;"
+         wire:ignore>
+        <div x-show="@entangle('showCertificationCropper') && @js($certificationImage !== null)"
              x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
              x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100"
-             x-transition:leave-end="opacity-0"
-             @keydown.escape.window="closeModal()"
-             class="fixed inset-0 z-[100] bg-gray-900/80 backdrop-blur-sm flex items-center justify-center p-4"
-             style="display: block; position: fixed; z-index: 9999;"
-             wire:ignore>
-            <div x-show="true"
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 scale-95"
-                 x-transition:enter-end="opacity-100 scale-100"
-                 x-transition:leave="transition ease-in duration-200"
-                 x-transition:leave-start="opacity-100 scale-100"
-                 x-transition:leave-end="opacity-0 scale-95"
-                 @click.away="closeModal()"
-                 class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto relative z-[101]"
-                 style="position: relative; z-index: 10000;">
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             @click.away="closeModal()"
+             class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto relative z-[101]"
+             style="position: relative; z-index: 10000;">
                 
                 {{-- Header del Modal --}}
                 <div class="bg-gradient-to-r from-purple-600 to-indigo-500 px-6 py-4 flex items-center justify-between rounded-t-2xl">
@@ -1391,6 +1761,7 @@
                 </div>
 
                 {{-- Contenido del Modal --}}
+                @if($certificationImage)
                 <div class="p-6">
                     <p class="text-sm text-gray-600 mb-4">Ajusta el recuadro para encuadrar el logo perfectamente. Puedes hacer zoom y mover la imagen.</p>
                     
@@ -1401,6 +1772,7 @@
                              style="max-width: 100%; max-height: 500px; display: block;">
                     </div>
                 </div>
+                @endif
 
                 {{-- Footer del Modal --}}
                 <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-2xl flex items-center justify-end gap-3">
@@ -1416,20 +1788,27 @@
                 </div>
             </div>
         </div>
-    @endif
+    </div>
 
     {{-- Modal: Asignar Certificación a Usuario --}}
-    @if($showUserCertificationModal)
-        <div class="fixed inset-0 z-50 bg-gray-900/40 flex items-center justify-center p-4" 
-             x-show="true"
+    <div x-show="@entangle('showUserCertificationModal')" 
+         x-cloak
+         class="fixed inset-0 z-50 bg-gray-900/40 flex items-center justify-center p-4" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         style="display: none;">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+             x-show="@entangle('showUserCertificationModal')"
              x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100">
-            <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-                 x-show="true"
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 scale-95"
-                 x-transition:enter-end="opacity-100 scale-100">
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95">
                 <div class="bg-gradient-to-r from-purple-600 to-indigo-500 px-6 py-4 flex items-center justify-between rounded-t-2xl">
                     <h3 class="text-xl font-bold text-white">
                         {{ $userCertificationId ? 'Editar Certificación de Usuario' : 'Asignar Certificación' }}
@@ -1520,93 +1899,440 @@
                 </div>
             </div>
         </div>
-    @endif
+    </div>
+
+    {{-- Modal: Crear/Editar Plan de Certificación --}}
+    <div x-show="@entangle('showPlanModal')" 
+         x-cloak
+         class="fixed inset-0 z-50 bg-gray-900/40 flex items-center justify-center p-4" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         style="display: none;">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+             x-show="@entangle('showPlanModal')"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95">
+                <div class="bg-gradient-to-r from-red-600 to-orange-600 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+                    <h3 class="text-xl font-bold text-white">
+                        {{ $planId ? 'Editar Plan de Certificación' : 'Nuevo Plan de Certificación' }}
+                    </h3>
+                    <button wire:click="closePlanModal" class="text-white/80 hover:text-white hover:bg-white/10 p-1.5 rounded-lg transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-6 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Línea de Servicio *</label>
+                            <select wire:model.live="planServiceLineId" 
+                                    class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                                <option value="">-- Selecciona --</option>
+                                @foreach($serviceLines as $serviceLine)
+                                    <option value="{{ $serviceLine->id }}">{{ $serviceLine->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('planServiceLineId') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Rol Interno *</label>
+                            <select wire:model="planInternalRoleId" 
+                                    class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                                    @if(!$planServiceLineId) disabled @endif>
+                                <option value="">-- Selecciona primero una línea de servicio --</option>
+                                @if($planServiceLineId && $internalRoles->count() > 0)
+                                    @foreach($internalRoles as $role)
+                                        <option value="{{ $role->id }}">{{ $role->name }}</option>
+                                    @endforeach
+                                @elseif($planServiceLineId && $internalRoles->count() === 0)
+                                    <option value="" disabled>No hay roles internos para esta línea de servicio</option>
+                                @endif
+                            </select>
+                            @error('planInternalRoleId') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
+                            @if($planServiceLineId && $internalRoles->count() === 0)
+                                <p class="text-xs text-amber-600 mt-1">⚠️ No hay roles internos definidos para el área de esta línea de servicio</p>
+                            @endif
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del Plan</label>
+                            <input type="text" wire:model="planName" 
+                                   placeholder="Se generará automáticamente si se deja vacío"
+                                   class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                            @error('planName') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                            <textarea wire:model="planDescription" rows="3"
+                                      class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"></textarea>
+                        </div>
+                        <div>
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" wire:model="planIsActive" class="rounded border-gray-300 text-red-600 focus:ring-red-500">
+                                <span class="text-sm font-medium text-gray-700">Plan activo</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-200 pt-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-lg font-bold text-gray-900">Certificaciones del Plan</h4>
+                            <button wire:click="addCertificationToPlan" 
+                                    class="px-4 py-2 text-sm font-semibold bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                </svg>
+                                Añadir Certificación
+                            </button>
+                        </div>
+
+                        @if(count($planCertifications) > 0)
+                            <div class="space-y-4">
+                                @foreach($planCertifications as $index => $planCert)
+                                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Certificación *</label>
+                                                <select wire:model="planCertifications.{{ $index }}.certification_id" 
+                                                        class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                                                    <option value="">-- Selecciona --</option>
+                                                    @foreach($certifications as $cert)
+                                                        <option value="{{ $cert->id }}">{{ $cert->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                                @error("planCertifications.{$index}.certification_id") <span class="text-xs text-red-600">{{ $message }}</span> @enderror
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Prioridad *</label>
+                                                <select wire:model="planCertifications.{{ $index }}.priority" 
+                                                        class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                                                    <option value="1">1 - Crítica</option>
+                                                    <option value="2">2 - Alta</option>
+                                                    <option value="3">3 - Media</option>
+                                                    <option value="4">4 - Baja</option>
+                                                    <option value="5">5 - Opcional</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Orden *</label>
+                                                <input type="number" wire:model="planCertifications.{{ $index }}.order" min="1"
+                                                       class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Meses objetivo</label>
+                                                <input type="number" wire:model="planCertifications.{{ $index }}.target_months" min="0"
+                                                       placeholder="Meses desde inicio del plan"
+                                                       class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Fecha objetivo</label>
+                                                <input type="date" wire:model="planCertifications.{{ $index }}.target_date"
+                                                       class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <label class="flex items-center gap-2">
+                                                    <input type="checkbox" wire:model="planCertifications.{{ $index }}.is_flexible" class="rounded border-gray-300 text-red-600 focus:ring-red-500">
+                                                    <span class="text-sm text-gray-700">Fecha flexible</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3 flex justify-end">
+                                            <button wire:click="removeCertificationFromPlan({{ $index }})" 
+                                                    class="px-3 py-1.5 text-sm font-semibold text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-sm text-gray-500 text-center py-4">No hay certificaciones añadidas al plan. Haz clic en "Añadir Certificación" para comenzar.</p>
+                        @endif
+                    </div>
+                </div>
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-2xl flex items-center justify-end gap-3">
+                    <button wire:click="closePlanModal" 
+                            class="px-4 py-2 text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 rounded-xl border border-gray-200">
+                        Cancelar
+                    </button>
+                    <button wire:click="savePlan" 
+                            class="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-xl hover:from-red-700 hover:to-orange-700 transition-all shadow-lg">
+                        {{ $planId ? 'Actualizar Plan' : 'Crear Plan' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal: Detalles del Plan --}}
+    <div x-show="@entangle('showPlanDetailModal')" 
+         x-cloak
+         class="fixed inset-0 z-50 bg-gray-900/40 flex items-center justify-center p-4" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         style="display: none;">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+             x-show="@entangle('showPlanDetailModal') && @js($selectedPlan !== null)"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95">
+            <div class="bg-gradient-to-r from-red-600 to-orange-600 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+                <h3 class="text-xl font-bold text-white">{{ $selectedPlan?->name ?? 'Plan de Certificación' }}</h3>
+                <button wire:click="closePlanDetailModal" class="text-white/80 hover:text-white hover:bg-white/10 p-1.5 rounded-lg transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            @if($selectedPlan)
+            <div class="p-6 space-y-6">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Línea de Servicio</p>
+                                <p class="text-sm font-bold text-gray-900 mt-1">{{ $selectedPlan->serviceLine?->name ?? 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Rol Interno</p>
+                                <p class="text-sm font-bold text-gray-900 mt-1">{{ $selectedPlan->internalRole?->name ?? 'N/A' }}</p>
+                            </div>
+                        </div>
+                        @if($selectedPlan->description)
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Descripción</p>
+                                <p class="text-sm text-gray-700">{{ $selectedPlan->description }}</p>
+                            </div>
+                        @endif
+
+                        <div>
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">Certificaciones ({{ $selectedPlan->certifications->count() }})</p>
+                            <div class="space-y-3">
+                                @foreach($selectedPlan->certifications->sortBy('order') as $planCert)
+                                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                        <div class="flex items-start justify-between">
+                                            <div class="flex-1">
+                                                <div class="flex items-center gap-3">
+                                                    <span class="text-xs font-bold text-gray-500">#{{ $planCert->order }}</span>
+                                                    <h5 class="text-sm font-bold text-gray-900">{{ $planCert->certification->name }}</h5>
+                                                    <span class="px-2 py-0.5 text-xs font-semibold rounded-full
+                                                        @if($planCert->priority <= 2) bg-red-100 text-red-800
+                                                        @elseif($planCert->priority == 3) bg-yellow-100 text-yellow-800
+                                                        @else bg-gray-100 text-gray-800
+                                                        @endif">
+                                                        {{ $planCert->priority_label }}
+                                                    </span>
+                                                </div>
+                                                @if($planCert->target_months || $planCert->target_date)
+                                                    <p class="text-xs text-gray-600 mt-2">
+                                                        @if($planCert->target_months)
+                                                            Objetivo: {{ $planCert->target_months }} meses desde inicio
+                                                        @elseif($planCert->target_date)
+                                                            Objetivo: {{ $planCert->target_date->format('d/m/Y') }}
+                                                        @endif
+                                                        @if($planCert->is_flexible)
+                                                            <span class="text-gray-500">(flexible)</span>
+                                                        @endif
+                                                    </p>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <div>
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">Usuarios con este plan ({{ $selectedPlan->userPlans->count() }})</p>
+                            @if($selectedPlan->userPlans->count() > 0)
+                                <div class="space-y-4">
+                                    @foreach($selectedPlan->userPlans as $userPlan)
+                                        @php
+                                            // Obtener certificaciones activas del usuario
+                                            $userActiveCertIds = $userPlan->user->userCertifications
+                                                ->where('status', 'active')
+                                                ->pluck('certification_id')
+                                                ->toArray();
+                                        @endphp
+                                        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden"
+                                             x-data="{ expanded: false }">
+                                            {{-- Header del usuario --}}
+                                            <div class="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200 cursor-pointer hover:bg-gray-200 transition-colors"
+                                                 @click="expanded = !expanded">
+                                                <div class="flex items-center gap-3 flex-1">
+                                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm">
+                                                        {{ substr($userPlan->user->name, 0, 1) }}
+                                                    </div>
+                                                    <div class="flex-1">
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="text-sm font-bold text-gray-900">{{ $userPlan->user->name }}</span>
+                                                            <span class="px-2 py-1 text-xs font-semibold rounded-full
+                                                                @if($userPlan->status === 'completed') bg-green-100 text-green-800
+                                                                @elseif($userPlan->status === 'in_progress') bg-blue-100 text-blue-800
+                                                                @else bg-gray-100 text-gray-800
+                                                                @endif">
+                                                                {{ ucfirst($userPlan->status) }}
+                                                            </span>
+                                                        </div>
+                                                        @if($userPlan->progress_percentage > 0)
+                                                            <div class="flex items-center gap-2 mt-1">
+                                                                <div class="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                                                    <div class="h-full bg-gradient-to-r from-green-500 to-green-600 rounded-full transition-all duration-300" 
+                                                                         style="width: {{ $userPlan->progress_percentage }}%"></div>
+                                                                </div>
+                                                                <span class="text-xs font-semibold text-gray-600">{{ number_format($userPlan->progress_percentage, 0) }}%</span>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-center gap-3">
+                                                    <span class="text-xs text-gray-500">{{ $userPlan->assigned_at->format('d/m/Y') }}</span>
+                                                    <svg class="w-5 h-5 text-gray-400 transition-transform duration-300" 
+                                                         :class="expanded ? 'rotate-180' : ''"
+                                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            
+                                            {{-- Certificaciones del usuario --}}
+                                            <div x-show="expanded" 
+                                                 x-transition:enter="transition ease-out duration-300"
+                                                 x-transition:enter-start="opacity-0"
+                                                 x-transition:enter-end="opacity-100"
+                                                 x-transition:leave="transition ease-in duration-200"
+                                                 x-transition:leave-start="opacity-100"
+                                                 x-transition:leave-end="opacity-0"
+                                                 style="display: none;"
+                                                 class="p-4 bg-white overflow-hidden">
+                                                <p class="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">
+                                                    Certificaciones del plan ({{ $selectedPlan->certifications->count() }})
+                                                </p>
+                                                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                                    @foreach($selectedPlan->certifications->sortBy('order') as $planCert)
+                                                        @php
+                                                            $cert = $planCert->certification;
+                                                            $hasCert = in_array($cert->id, $userActiveCertIds);
+                                                        @endphp
+                                                        <div class="relative group">
+                                                            <div class="bg-white rounded-lg border-2 p-3 transition-all duration-300
+                                                                @if($hasCert) border-green-300 shadow-md hover:shadow-lg
+                                                                @else border-gray-200 hover:border-gray-300
+                                                                @endif">
+                                                                {{-- Logo de la certificación --}}
+                                                                <div class="aspect-square flex items-center justify-center mb-2 relative">
+                                                                    @if($cert->image_url)
+                                                                        <img src="{{ $cert->image_url }}" 
+                                                                             alt="{{ $cert->name }}"
+                                                                             class="w-full h-full object-contain rounded
+                                                                             @if($hasCert) 
+                                                                                 opacity-100
+                                                                             @else 
+                                                                                 opacity-40 grayscale blur-sm
+                                                                             @endif
+                                                                             transition-all duration-300">
+                                                                    @else
+                                                                        <div class="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 rounded flex items-center justify-center
+                                                                            @if($hasCert) 
+                                                                                from-green-200 to-green-300
+                                                                            @endif">
+                                                                            <span class="text-xs font-bold text-gray-600
+                                                                                @if($hasCert) text-green-800 @endif">
+                                                                                {{ substr($cert->name, 0, 2) }}
+                                                                            </span>
+                                                                        </div>
+                                                                    @endif
+                                                                    
+                                                                    {{-- Badge de completado --}}
+                                                                    @if($hasCert)
+                                                                        <div class="absolute top-0 right-0 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-lg transform translate-x-1 -translate-y-1">
+                                                                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                                                            </svg>
+                                                                        </div>
+                                                                    @endif
+                                                                </div>
+                                                                
+                                                                {{-- Nombre de la certificación --}}
+                                                                <p class="text-xs font-semibold text-gray-900 text-center line-clamp-2
+                                                                    @if($hasCert) text-green-800 @endif"
+                                                                   title="{{ $cert->name }}">
+                                                                    {{ $cert->name }}
+                                                                </p>
+                                                                
+                                                                {{-- Prioridad --}}
+                                                                <div class="mt-1 flex justify-center">
+                                                                    <span class="px-1.5 py-0.5 text-[10px] font-bold rounded
+                                                                        @if($planCert->priority <= 2) bg-red-100 text-red-800
+                                                                        @elseif($planCert->priority == 3) bg-yellow-100 text-yellow-800
+                                                                        @else bg-gray-100 text-gray-800
+                                                                        @endif">
+                                                                        {{ $planCert->priority_label }}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                                
+                                                {{-- Resumen --}}
+                                                @php
+                                                    $completedCount = $selectedPlan->certifications->filter(function($planCert) use ($userActiveCertIds) {
+                                                        return in_array($planCert->certification_id, $userActiveCertIds);
+                                                    })->count();
+                                                    $totalCount = $selectedPlan->certifications->count();
+                                                @endphp
+                                                <div class="mt-4 pt-4 border-t border-gray-200">
+                                                    <div class="flex items-center justify-between text-sm">
+                                                        <span class="font-semibold text-gray-700">Progreso:</span>
+                                                        <span class="font-bold 
+                                                            @if($completedCount === $totalCount) text-green-600
+                                                            @elseif($completedCount > 0) text-blue-600
+                                                            @else text-gray-600
+                                                            @endif">
+                                                            {{ $completedCount }} / {{ $totalCount }} certificaciones
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <p class="text-sm text-gray-500 text-center py-4">Ningún usuario tiene este plan asignado</p>
+                            @endif
+                        </div>
+            </div>
+            @endif
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-2xl flex items-center justify-between gap-3">
+                @if($selectedPlan)
+                <button wire:click="syncPlanWithUsers({{ $selectedPlan->id }})" 
+                        wire:confirm="¿Sincronizar este plan con todos los usuarios que deberían tenerlo?"
+                        class="px-4 py-2 text-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Sincronizar con usuarios
+                </button>
+                @endif
+                <button wire:click="closePlanDetailModal" 
+                        class="px-4 py-2 text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 rounded-xl border border-gray-200">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
-
-@push('styles')
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
-@endpush
-
-@push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
-<script>
-function certificationCropperModal() {
-    return {
-        cropper: null,
-        
-        init() {
-            // Esperar a que la imagen esté cargada
-            this.$nextTick(() => {
-                setTimeout(() => {
-                    this.initCropper();
-                }, 300);
-            });
-        },
-        
-        initCropper() {
-            const imageId = 'cropper-certification-image';
-            const image = document.getElementById(imageId);
-            
-            if (image && !this.cropper) {
-                // Destruir cropper anterior si existe
-                if (this.cropper) {
-                    this.cropper.destroy();
-                }
-                
-                this.cropper = new Cropper(image, {
-                    aspectRatio: 1, // Cuadrado para logos
-                    viewMode: 1,
-                    dragMode: 'move',
-                    autoCropArea: 0.8,
-                    restore: false,
-                    guides: true,
-                    center: true,
-                    highlight: false,
-                    cropBoxMovable: true,
-                    cropBoxResizable: true,
-                    toggleDragModeOnDblclick: false,
-                    minCropBoxWidth: 100,
-                    minCropBoxHeight: 100,
-                });
-            }
-        },
-        
-        destroyCropper() {
-            if (this.cropper) {
-                this.cropper.destroy();
-                this.cropper = null;
-            }
-        },
-        
-        cropAndSave() {
-            if (!this.cropper) {
-                alert('El cropper no está inicializado. Por favor espera un momento.');
-                return;
-            }
-            
-            const canvas = this.cropper.getCroppedCanvas({
-                width: 512,
-                height: 512,
-                imageSmoothingEnabled: true,
-                imageSmoothingQuality: 'high',
-            });
-            
-            const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
-            
-            @this.cropCertificationImage(croppedDataUrl);
-            
-            // Esperar un momento y luego guardar
-            setTimeout(() => {
-                @this.saveCroppedCertificationImage();
-                this.closeModal();
-            }, 100);
-        },
-        
-        closeModal() {
-            this.destroyCropper();
-            @this.cancelCertificationCrop();
-        }
-    }
-}
-</script>
-@endpush

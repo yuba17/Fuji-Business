@@ -9,12 +9,18 @@ use App\Models\UserCertification;
 use App\Models\CertificationBadge;
 use App\Models\InternalRole;
 use App\Models\CertificationAttribute;
+use App\Models\CertificationPlan;
+use App\Models\CertificationPlanCertification;
+use App\Models\UserCertificationPlan;
+use App\Models\ServiceLine;
+use App\Services\CertificationPlanService;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
@@ -35,7 +41,13 @@ class PlanDesarrolloCertificaciones extends Component
     public $showExpiringSoon = false;
     
     // Vista
-    public $viewMode = 'inventory'; // inventory, matrix, roadmap, leaderboard, badges
+    public $viewMode = 'inventory'; // inventory, matrix, roadmap, leaderboard, badges, plans
+    
+    // Filtros para planes
+    public $planFilterServiceLine = '';
+    public $planFilterInternalRole = '';
+    public $planFilterStatus = 'all'; // all, active, inactive
+    public $planSearch = '';
     
     // Usuario seleccionado para roadmap personalizado
     public $selectedUserId = null;
@@ -48,6 +60,9 @@ class PlanDesarrolloCertificaciones extends Component
     public $selectedMatrixCertification = null;
     public $matrixDetailSearch = '';
     public $matrixDetailFilter = 'all'; // all, expired, expiring_soon, valid, permanent
+    public $showPlanModal = false;
+    public $showPlanDetailModal = false;
+    public $selectedPlanId = null;
     
     // Formulario de certificación
     public $certificationId = null;
@@ -63,7 +78,6 @@ class PlanDesarrolloCertificaciones extends Component
     public $certificationValueScore = null;
     public $certificationIsCritical = false;
     public $certificationIsInternal = false;
-    public $certificationPointsReward = 0;
     public $certificationUrl = '';
     public $certificationImage = null;
     public $certificationImageUrl = null;
@@ -84,7 +98,16 @@ class PlanDesarrolloCertificaciones extends Component
     public $userCertificationPriority = 0;
     public $userCertificationNotes = '';
 
-    protected $listeners = ['certificationUpdated' => '$refresh'];
+    // Formulario de plan de certificación
+    public $planId = null;
+    public $planServiceLineId = null;
+    public $planInternalRoleId = null;
+    public $planName = '';
+    public $planDescription = '';
+    public $planIsActive = true;
+    public $planCertifications = []; // Array de certificaciones con prioridad, order, target_months, etc.
+
+    protected $listeners = ['certificationUpdated' => '$refresh', 'planUpdated' => '$refresh'];
 
     public function mount(Plan $plan)
     {
@@ -228,7 +251,6 @@ class PlanDesarrolloCertificaciones extends Component
             $this->certificationValueScore = $cert->value_score;
             $this->certificationIsCritical = $cert->is_critical;
             $this->certificationIsInternal = $cert->is_internal;
-            $this->certificationPointsReward = $cert->points_reward;
             $this->certificationUrl = $cert->official_url ?? '';
             $this->certificationImageUrl = $cert->image_url;
         } else {
@@ -382,7 +404,6 @@ class PlanDesarrolloCertificaciones extends Component
             'certificationValueScore' => 'nullable|integer|min:1|max:10',
             'certificationIsCritical' => 'boolean',
             'certificationIsInternal' => 'boolean',
-            'certificationPointsReward' => 'integer|min:0',
             'certificationUrl' => 'nullable|url|max:500',
             'certificationImage' => 'nullable|image|max:2048', // 2MB max
         ]);
@@ -400,7 +421,6 @@ class PlanDesarrolloCertificaciones extends Component
             'value_score' => $validated['certificationValueScore'],
             'is_critical' => $validated['certificationIsCritical'],
             'is_internal' => $validated['certificationIsInternal'],
-            'points_reward' => $validated['certificationPointsReward'],
             'official_url' => $validated['certificationUrl'] ?: null,
         ];
 
@@ -559,24 +579,32 @@ class PlanDesarrolloCertificaciones extends Component
         }
     }
 
-    public function openUserCertificationModal($userId = null, $userCertificationId = null)
+    public function openUserCertificationModal($userId = null, $userCertificationId = null, $certificationId = null)
     {
-        $this->userCertificationId = $userCertificationId;
-        $this->userCertificationUserId = $userId;
-        
         if ($userCertificationId) {
+            // Editar certificación existente
             $uc = UserCertification::find($userCertificationId);
-            $this->userCertificationUserId = $uc->user_id;
-            $this->userCertificationCertificationId = $uc->certification_id;
-            $this->userCertificationObtainedAt = $uc->obtained_at?->format('Y-m-d');
-            $this->userCertificationExpiresAt = $uc->expires_at?->format('Y-m-d');
-            $this->userCertificationCertificateNumber = $uc->certificate_number ?? '';
-            $this->userCertificationStatus = $uc->status;
-            $this->userCertificationPlannedDate = $uc->planned_date?->format('Y-m-d');
-            $this->userCertificationPriority = $uc->priority;
-            $this->userCertificationNotes = $uc->notes ?? '';
+            if ($uc) {
+                $this->userCertificationId = $userCertificationId;
+                $this->userCertificationUserId = $uc->user_id;
+                $this->userCertificationCertificationId = $uc->certification_id;
+                $this->userCertificationObtainedAt = $uc->obtained_at?->format('Y-m-d');
+                $this->userCertificationExpiresAt = $uc->expires_at?->format('Y-m-d');
+                $this->userCertificationCertificateNumber = $uc->certificate_number ?? '';
+                $this->userCertificationStatus = $uc->status;
+                $this->userCertificationPlannedDate = $uc->planned_date?->format('Y-m-d');
+                $this->userCertificationPriority = $uc->priority;
+                $this->userCertificationNotes = $uc->notes ?? '';
+            }
         } else {
+            // Nueva certificación
             $this->resetUserCertificationForm();
+            if ($userId) {
+                $this->userCertificationUserId = $userId;
+            }
+            if ($certificationId) {
+                $this->userCertificationCertificationId = $certificationId;
+            }
         }
         
         $this->showUserCertificationModal = true;
@@ -656,7 +684,6 @@ class PlanDesarrolloCertificaciones extends Component
         $this->certificationValueScore = null;
         $this->certificationIsCritical = false;
         $this->certificationIsInternal = false;
-        $this->certificationPointsReward = 0;
         $this->certificationUrl = '';
         $this->certificationImage = null;
         $this->certificationImageUrl = null;
@@ -676,6 +703,289 @@ class PlanDesarrolloCertificaciones extends Component
         $this->userCertificationPlannedDate = null;
         $this->userCertificationPriority = 0;
         $this->userCertificationNotes = '';
+    }
+
+    // ========== MÉTODOS PARA PLANES DE CERTIFICACIÓN ==========
+
+    public function openPlanModal($planId = null)
+    {
+        $this->planId = $planId;
+        if ($planId) {
+            $plan = CertificationPlan::with('certifications.certification')->findOrFail($planId);
+            $this->planServiceLineId = $plan->service_line_id;
+            $this->planInternalRoleId = $plan->internal_role_id;
+            $this->planName = $plan->name;
+            $this->planDescription = $plan->description ?? '';
+            $this->planIsActive = $plan->is_active;
+            $this->planCertifications = $plan->certifications->map(function($pc) {
+                return [
+                    'id' => $pc->id,
+                    'certification_id' => $pc->certification_id,
+                    'priority' => $pc->priority,
+                    'order' => $pc->order,
+                    'target_months' => $pc->target_months,
+                    'target_date' => $pc->target_date?->format('Y-m-d'),
+                    'is_flexible' => $pc->is_flexible,
+                ];
+            })->toArray();
+        } else {
+            $this->resetPlanForm();
+        }
+        $this->showPlanModal = true;
+    }
+
+    public function updatedPlanServiceLineId($value)
+    {
+        // Cuando cambia la línea de servicio, resetear el rol interno seleccionado
+        // Los roles internos se filtrarán automáticamente en el render
+        if ($value) {
+            $this->planInternalRoleId = null;
+        }
+    }
+
+    public function closePlanModal()
+    {
+        $this->showPlanModal = false;
+        $this->resetPlanForm();
+    }
+
+    public function resetPlanForm()
+    {
+        $this->planId = null;
+        $this->planServiceLineId = null;
+        $this->planInternalRoleId = null;
+        $this->planName = '';
+        $this->planDescription = '';
+        $this->planIsActive = true;
+        $this->planCertifications = [];
+    }
+
+    public function addCertificationToPlan()
+    {
+        $this->planCertifications[] = [
+            'id' => null,
+            'certification_id' => null,
+            'priority' => 3,
+            'order' => count($this->planCertifications) + 1,
+            'target_months' => null,
+            'target_date' => null,
+            'is_flexible' => true,
+        ];
+    }
+
+    public function removeCertificationFromPlan($index)
+    {
+        unset($this->planCertifications[$index]);
+        $this->planCertifications = array_values($this->planCertifications);
+        // Reordenar
+        foreach ($this->planCertifications as $idx => $cert) {
+            $this->planCertifications[$idx]['order'] = $idx + 1;
+        }
+    }
+
+    public function savePlan()
+    {
+        $validated = $this->validate([
+            'planServiceLineId' => 'required|exists:service_lines,id',
+            'planInternalRoleId' => 'required|exists:internal_roles,id',
+            'planName' => 'nullable|string|max:255',
+            'planDescription' => 'nullable|string',
+            'planIsActive' => 'boolean',
+            'planCertifications' => 'array',
+            'planCertifications.*.certification_id' => 'required|exists:certifications,id',
+            'planCertifications.*.priority' => 'required|integer|min:1|max:5',
+            'planCertifications.*.order' => 'required|integer|min:1',
+            'planCertifications.*.target_months' => 'nullable|integer|min:0',
+            'planCertifications.*.target_date' => 'nullable|date',
+            'planCertifications.*.is_flexible' => 'boolean',
+        ], [], [
+            'planServiceLineId' => 'línea de servicio',
+            'planInternalRoleId' => 'rol interno',
+            'planName' => 'nombre',
+            'planDescription' => 'descripción',
+            'planIsActive' => 'activo',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            if ($this->planId) {
+                $plan = CertificationPlan::findOrFail($this->planId);
+                $wasActive = $plan->is_active;
+                $plan->update([
+                    'service_line_id' => $validated['planServiceLineId'],
+                    'internal_role_id' => $validated['planInternalRoleId'],
+                    'name' => $validated['planName'],
+                    'description' => $validated['planDescription'],
+                    'is_active' => $validated['planIsActive'],
+                ]);
+
+                // Si el plan se activa por primera vez, asignarlo a usuarios existentes
+                if (!$wasActive && $validated['planIsActive']) {
+                    $this->autoAssignPlanToExistingUsers($plan);
+                }
+            } else {
+                $plan = CertificationPlan::create([
+                    'service_line_id' => $validated['planServiceLineId'],
+                    'internal_role_id' => $validated['planInternalRoleId'],
+                    'name' => $validated['planName'],
+                    'description' => $validated['planDescription'],
+                    'is_active' => $validated['planIsActive'],
+                    'created_by' => Auth::id(),
+                ]);
+
+                // Si el plan está activo, asignarlo automáticamente a usuarios existentes
+                if ($validated['planIsActive']) {
+                    $this->autoAssignPlanToExistingUsers($plan);
+                }
+            }
+
+            // Eliminar certificaciones que ya no están en el plan
+            $currentCertIds = collect($validated['planCertifications'])->pluck('id')->filter();
+            CertificationPlanCertification::where('certification_plan_id', $plan->id)
+                ->whereNotIn('id', $currentCertIds)
+                ->delete();
+
+            // Actualizar o crear certificaciones del plan
+            foreach ($validated['planCertifications'] as $certData) {
+                if (isset($certData['id']) && $certData['id']) {
+                    CertificationPlanCertification::where('id', $certData['id'])->update([
+                        'certification_id' => $certData['certification_id'],
+                        'priority' => $certData['priority'],
+                        'order' => $certData['order'],
+                        'target_months' => $certData['target_months'],
+                        'target_date' => $certData['target_date'],
+                        'is_flexible' => $certData['is_flexible'] ?? true,
+                    ]);
+                } else {
+                    CertificationPlanCertification::create([
+                        'certification_plan_id' => $plan->id,
+                        'certification_id' => $certData['certification_id'],
+                        'priority' => $certData['priority'],
+                        'order' => $certData['order'],
+                        'target_months' => $certData['target_months'],
+                        'target_date' => $certData['target_date'],
+                        'is_flexible' => $certData['is_flexible'] ?? true,
+                    ]);
+                }
+            }
+
+            DB::commit();
+            session()->flash('message', $this->planId ? 'Plan actualizado correctamente' : 'Plan creado correctamente');
+            $this->closePlanModal();
+            $this->dispatch('planUpdated');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al guardar plan de certificación', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            session()->flash('error', 'Error al guardar el plan: ' . $e->getMessage());
+        }
+    }
+
+    public function deletePlan($planId)
+    {
+        try {
+            $plan = CertificationPlan::findOrFail($planId);
+            $plan->delete();
+            session()->flash('message', 'Plan eliminado correctamente');
+            $this->dispatch('planUpdated');
+        } catch (\Exception $e) {
+            Log::error('Error al eliminar plan de certificación', [
+                'error' => $e->getMessage(),
+            ]);
+            session()->flash('error', 'Error al eliminar el plan: ' . $e->getMessage());
+        }
+    }
+
+    public function viewPlanDetail($planId)
+    {
+        $this->selectedPlanId = $planId;
+        $this->showPlanDetailModal = true;
+    }
+
+    public function closePlanDetailModal()
+    {
+        $this->showPlanDetailModal = false;
+        $this->selectedPlanId = null;
+    }
+
+    public function assignPlanToUser($planId, $userId)
+    {
+        try {
+            $plan = CertificationPlan::findOrFail($planId);
+            $user = User::findOrFail($userId);
+            $service = app(CertificationPlanService::class);
+            $service->assignPlanToUser($plan, $user, Auth::user(), 'manual');
+            session()->flash('message', 'Plan asignado correctamente al usuario');
+            $this->dispatch('planUpdated');
+        } catch (\Exception $e) {
+            Log::error('Error al asignar plan a usuario', [
+                'error' => $e->getMessage(),
+            ]);
+            session()->flash('error', 'Error al asignar el plan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Sincronizar un plan con todos los usuarios que deberían tenerlo
+     * Útil cuando se actualiza un usuario o se crea un plan después de que los usuarios ya existían
+     */
+    public function syncPlanWithUsers($planId)
+    {
+        try {
+            $plan = CertificationPlan::findOrFail($planId);
+            
+            if (!$plan->is_active) {
+                session()->flash('error', 'No se puede sincronizar un plan inactivo');
+                return;
+            }
+
+            $this->autoAssignPlanToExistingUsers($plan);
+            session()->flash('message', 'Plan sincronizado correctamente con usuarios existentes');
+            $this->dispatch('planUpdated');
+        } catch (\Exception $e) {
+            Log::error('Error al sincronizar plan con usuarios', [
+                'plan_id' => $planId,
+                'error' => $e->getMessage(),
+            ]);
+            session()->flash('error', 'Error al sincronizar el plan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Asignar automáticamente un plan a usuarios existentes que coincidan con el rol y línea de servicio
+     */
+    protected function autoAssignPlanToExistingUsers(CertificationPlan $plan): void
+    {
+        try {
+            $service = app(CertificationPlanService::class);
+            
+            // Buscar usuarios que tengan el mismo rol interno y la misma línea de servicio
+            $users = User::where('internal_role_id', $plan->internal_role_id)
+                ->whereHas('serviceLines', function($q) use ($plan) {
+                    $q->where('service_lines.id', $plan->service_line_id);
+                })
+                ->get();
+
+            foreach ($users as $user) {
+                // Verificar si ya tiene este plan asignado
+                $existingPlan = UserCertificationPlan::where('user_id', $user->id)
+                    ->where('certification_plan_id', $plan->id)
+                    ->whereIn('status', ['pending', 'in_progress'])
+                    ->first();
+
+                if (!$existingPlan) {
+                    $service->assignPlanToUser($plan, $user, Auth::user(), 'automatic');
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Error al asignar automáticamente plan a usuarios existentes', [
+                'plan_id' => $plan->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     public function render()
@@ -744,15 +1054,15 @@ class PlanDesarrolloCertificaciones extends Component
                 }),
         ];
 
-        // Leaderboard (por puntos de gamificación)
+        // Leaderboard (por número de certificaciones activas)
         $leaderboard = $teamUsers->map(function($user) {
             return [
                 'user' => $user,
-                'points' => $user->total_certification_points,
                 'active_certifications' => $user->userCertifications->where('status', 'active')->count(),
-                'badges' => $user->certificationBadges->count(),
+                'planned_certifications' => $user->userCertifications->where('status', 'planned')->count(),
+                'completed_plans' => $user->certificationPlans->where('status', 'completed')->count(),
             ];
-        })->sortByDesc('points')->values();
+        })->sortByDesc('active_certifications')->values();
 
         // Badges recientes
         $recentBadges = CertificationBadge::whereIn('user_id', $teamUsers->pluck('id'))
@@ -764,21 +1074,84 @@ class PlanDesarrolloCertificaciones extends Component
         // Roadmap personalizado (si hay usuario seleccionado)
         $personalRoadmap = null;
         $roadmapTimeline = null;
+        $selectedUserPlans = collect();
         if ($this->selectedUserId) {
             $user = $teamUsers->firstWhere('id', $this->selectedUserId);
             if ($user) {
+                // Obtener planes asignados al usuario
+                $selectedUserPlans = UserCertificationPlan::where('user_id', $user->id)
+                    ->whereIn('status', ['pending', 'in_progress'])
+                    ->with(['plan.certifications.certification'])
+                    ->get();
+                
+                // Obtener certificaciones del usuario (tanto del plan como individuales)
                 $personalRoadmap = $user->userCertifications()
                     ->whereIn('status', ['planned', 'in_progress', 'active'])
-                    ->with('certification')
+                    ->with(['certification', 'certificationPlan'])
                     ->orderBy('planned_date')
                     ->orderBy('priority', 'desc')
                     ->get();
                 
+                // Si el usuario tiene planes asignados, incluir certificaciones del plan que aún no están en userCertifications
+                foreach ($selectedUserPlans as $userPlan) {
+                    foreach ($userPlan->plan->certifications as $planCert) {
+                        // Verificar si ya existe esta certificación en el roadmap
+                        $exists = $personalRoadmap->contains(function($uc) use ($planCert) {
+                            return $uc->certification_id === $planCert->certification_id;
+                        });
+                        
+                        if (!$exists) {
+                            // Calcular fecha planificada basada en target_months o target_date
+                            $plannedDate = null;
+                            if ($planCert->target_date) {
+                                $plannedDate = $planCert->target_date;
+                            } elseif ($planCert->target_months) {
+                                $plannedDate = $userPlan->assigned_at->copy()->addMonths($planCert->target_months);
+                            } else {
+                                $plannedDate = $userPlan->assigned_at->copy()->addMonths(3); // Default 3 meses
+                            }
+                            
+                            // Crear un objeto virtual para el roadmap
+                            $virtualCert = (object) [
+                                'id' => null,
+                                'user_id' => $user->id,
+                                'certification_id' => $planCert->certification_id,
+                                'certification_plan_id' => $userPlan->plan->id,
+                                'assigned_from_plan_at' => $userPlan->assigned_at,
+                                'status' => 'planned',
+                                'planned_date' => $plannedDate,
+                                'priority' => $planCert->priority,
+                                'notes' => null,
+                                'certification' => $planCert->certification,
+                                'certificationPlan' => $userPlan->plan,
+                                'is_from_plan' => true,
+                            ];
+                            
+                            $personalRoadmap->push($virtualCert);
+                        }
+                    }
+                }
+                
                 // Preparar datos para timeline visual
-                $roadmapTimeline = $personalRoadmap->map(function($uc) {
+                $roadmapTimeline = $personalRoadmap->map(function($uc) use ($selectedUserPlans, $user) {
                     $date = $uc->planned_date ?? $uc->obtained_at ?? now();
+                    $isFromPlan = isset($uc->is_from_plan) ? $uc->is_from_plan : (!is_null($uc->certification_plan_id ?? null));
+                    $planId = $uc->certification_plan_id ?? null;
+                    $userPlan = null;
+                    $planName = null;
+                    
+                    if ($isFromPlan && $planId) {
+                        $userPlan = $selectedUserPlans->firstWhere('certification_plan_id', $planId);
+                        if ($userPlan) {
+                            $planName = $userPlan->plan->name;
+                        } elseif (isset($uc->certificationPlan)) {
+                            $planName = $uc->certificationPlan->name;
+                        }
+                    }
+                    
                     return [
                         'id' => $uc->id,
+                        'user_certification_id' => $uc->id,
                         'certification' => $uc->certification,
                         'name' => $uc->certification->name,
                         'provider' => $uc->certification->provider,
@@ -788,8 +1161,10 @@ class PlanDesarrolloCertificaciones extends Component
                         'date_formatted' => $date->format('d/m/Y'),
                         'status' => $uc->status,
                         'priority' => $uc->priority,
-                        'notes' => $uc->notes,
+                        'notes' => $uc->notes ?? null,
                         'is_critical' => $uc->certification->is_critical ?? false,
+                        'is_from_plan' => $isFromPlan,
+                        'plan_name' => $planName,
                         'month' => $date->format('Y-m'),
                         'month_label' => $date->locale('es')->translatedFormat('F Y'),
                         'day' => $date->format('d'),
@@ -843,6 +1218,84 @@ class PlanDesarrolloCertificaciones extends Component
         $providerOptions = $this->attributeOptions['provider'] ?? [];
         $levelOptions = $this->attributeOptions['level'] ?? [];
 
+        // Obtener planes de certificación para el área con filtros
+        // Mostrar planes que tengan una línea de servicio del área, o planes sin línea de servicio asignada
+        $certificationPlansQuery = CertificationPlan::with(['serviceLine', 'internalRole', 'certifications.certification', 'userPlans.user'])
+            ->where(function($q) {
+                $q->whereHas('serviceLine', function($serviceLineQ) {
+                    $serviceLineQ->where('area_id', $this->plan->area_id);
+                })
+                ->orWhereNull('service_line_id'); // Incluir planes sin línea de servicio asignada
+            });
+
+        // Aplicar filtros
+        if ($this->planFilterServiceLine) {
+            $certificationPlansQuery->where('service_line_id', $this->planFilterServiceLine);
+        }
+
+        if ($this->planFilterInternalRole) {
+            $certificationPlansQuery->where('internal_role_id', $this->planFilterInternalRole);
+        }
+
+        if ($this->planFilterStatus === 'active') {
+            $certificationPlansQuery->where('is_active', true);
+        } elseif ($this->planFilterStatus === 'inactive') {
+            $certificationPlansQuery->where('is_active', false);
+        }
+
+        if ($this->planSearch) {
+            $certificationPlansQuery->where(function($q) {
+                $q->where('name', 'like', '%' . $this->planSearch . '%')
+                  ->orWhere('description', 'like', '%' . $this->planSearch . '%')
+                  ->orWhereHas('serviceLine', function($q2) {
+                      $q2->where('name', 'like', '%' . $this->planSearch . '%');
+                  })
+                  ->orWhereHas('internalRole', function($q2) {
+                      $q2->where('name', 'like', '%' . $this->planSearch . '%');
+                  });
+            });
+        }
+
+        $certificationPlans = $certificationPlansQuery->orderBy('name')->get();
+
+        // Cargar el plan seleccionado con todas sus relaciones si existe
+        $selectedPlan = null;
+        if ($this->selectedPlanId) {
+            $selectedPlan = CertificationPlan::with([
+                'serviceLine',
+                'internalRole',
+                'certifications.certification',
+                'userPlans.user.userCertifications' => function($q) {
+                    $q->where('status', 'active');
+                },
+                'creator'
+            ])->find($this->selectedPlanId);
+        }
+
+        // Obtener líneas de servicio y roles internos del área
+        $serviceLines = ServiceLine::where('area_id', $this->plan->area_id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        // Obtener roles internos: mostrar todos los roles internos disponibles
+        // Nota: Los roles internos no tienen relación directa con áreas, así que mostramos todos
+        // Alternativamente, podríamos filtrar por roles que tienen usuarios en el área del plan
+        $internalRoles = InternalRole::orderBy('name')->get();
+        
+        // Opcional: Filtrar solo roles que tienen usuarios en el área del plan
+        // $internalRoles = InternalRole::whereHas('users', function($q) {
+        //     $q->where('area_id', $this->plan->area_id);
+        // })->orderBy('name')->get();
+
+        // Obtener planes asignados a usuarios del área
+        $userPlans = UserCertificationPlan::with(['plan.serviceLine', 'plan.internalRole', 'user', 'plan.certifications.certification'])
+            ->whereHas('user', function($q) {
+                $q->where('area_id', $this->plan->area_id);
+            })
+            ->orderBy('assigned_at', 'desc')
+            ->get();
+
         return view('livewire.plans.plan-desarrollo-certificaciones', [
             'teamUsers' => $teamUsers,
             'certifications' => $certifications,
@@ -852,10 +1305,16 @@ class PlanDesarrolloCertificaciones extends Component
             'recentBadges' => $recentBadges,
             'personalRoadmap' => $personalRoadmap,
             'roadmapTimeline' => $roadmapTimeline,
+            'selectedUserPlans' => $selectedUserPlans,
             'matrixData' => $matrixData,
             'categoryOptions' => $categoryOptions,
             'providerOptions' => $providerOptions,
             'levelOptions' => $levelOptions,
+            'certificationPlans' => $certificationPlans,
+            'serviceLines' => $serviceLines,
+            'internalRoles' => $internalRoles,
+            'userPlans' => $userPlans,
+            'selectedPlan' => $selectedPlan,
         ]);
     }
 }

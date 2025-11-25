@@ -50,19 +50,27 @@ class TagService
 
     /**
      * Actualizar contador de uso de tags
+     * Optimización: Cargar todos los tags de una vez para evitar N+1
      */
     protected function updateUsageCounts(array $tagIds): void
     {
-        foreach ($tagIds as $tagId) {
-            $tag = Tag::find($tagId);
-            if ($tag) {
-                $tag->update([
-                    'usage_count' => $tag->plans()->count() + 
-                                    $tag->tasks()->count() + 
-                                    $tag->risks()->count() + 
-                                    $tag->decisions()->count()
-                ]);
-            }
+        if (empty($tagIds)) {
+            return;
+        }
+
+        // Cargar todos los tags de una vez
+        $tags = Tag::whereIn('id', $tagIds)->get();
+        
+        foreach ($tags as $tag) {
+            // Optimización: Usar withCount para obtener los conteos en una sola consulta
+            $tag->loadCount(['plans', 'tasks', 'risks', 'decisions']);
+            
+            $tag->update([
+                'usage_count' => $tag->plans_count + 
+                                $tag->tasks_count + 
+                                $tag->risks_count + 
+                                $tag->decisions_count
+            ]);
         }
     }
 

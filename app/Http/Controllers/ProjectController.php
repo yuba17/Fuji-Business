@@ -58,7 +58,8 @@ class ProjectController extends Controller
         $plans = Plan::whereHas('planType', function($q) {
             $q->where('slug', 'plan-comercial');
         })->where('status', '!=', 'archived')->get();
-        $users = User::all();
+        // Optimización: Solo seleccionar campos necesarios y ordenar por nombre
+        $users = User::select('id', 'name')->orderBy('name')->get();
         $clientId = $request->get('client_id');
         
         return view('projects.create', compact('clients', 'plans', 'users', 'clientId'));
@@ -108,7 +109,8 @@ class ProjectController extends Controller
         $plans = Plan::whereHas('planType', function($q) {
             $q->where('slug', 'plan-comercial');
         })->where('status', '!=', 'archived')->get();
-        $users = User::all();
+        // Optimización: Solo seleccionar campos necesarios y ordenar por nombre
+        $users = User::select('id', 'name')->orderBy('name')->get();
         
         return view('projects.edit', compact('project', 'clients', 'plans', 'users'));
     }

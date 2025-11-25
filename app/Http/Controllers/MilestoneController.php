@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Milestone;
 use App\Models\Plan;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -34,8 +35,10 @@ class MilestoneController extends Controller
         $this->authorize('update', $plan);
         
         $milestones = $plan->milestones()->orderBy('name')->get();
+        // Optimización: Pasar usuarios desde el controlador en lugar de cargarlos en la vista
+        $users = User::select('id', 'name')->orderBy('name')->get();
         
-        return view('milestones.create', compact('plan', 'milestones'));
+        return view('milestones.create', compact('plan', 'milestones', 'users'));
     }
 
     /**
@@ -98,8 +101,10 @@ class MilestoneController extends Controller
             ->where('id', '!=', $milestone->id)
             ->orderBy('name')
             ->get();
+        // Optimización: Pasar usuarios desde el controlador en lugar de cargarlos en la vista
+        $users = User::select('id', 'name')->orderBy('name')->get();
         
-        return view('milestones.edit', compact('plan', 'milestone', 'milestones'));
+        return view('milestones.edit', compact('plan', 'milestone', 'milestones', 'users'));
     }
 
     /**
